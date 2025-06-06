@@ -1,0 +1,2394 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, maximum-scale=1.0">
+    <title>NumRush: Aventura Matemática</title>
+    <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <style>
+        /* =================================
+           MOBILE FIRST CSS - BASE STYLES
+        ================================= */
+        
+        * {
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+        }
+        
+        body {
+            font-family: 'Press Start 2P', cursive;
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
+            background-color: #1a202c;
+            color: #f7fafc;
+            width: 100vw;
+            height: 100vh;
+            position: fixed;
+            top: 0;
+            left: 0;
+            touch-action: manipulation;
+        }
+        
+        .game-container {
+            width: 100vw;
+            height: 100vh;
+            background-color: #2d3748;
+            position: relative;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* =================================
+           TELAS DO JOGO
+        ================================= */
+        
+        .screen {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 1rem;
+            text-align: center;
+            transition: opacity 0.5s ease-in-out;
+            z-index: 10;
+        }
+        
+        .hidden {
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        /* =================================
+           CANVAS DO JOGO
+        ================================= */
+        
+        #gameCanvas {
+            display: block;
+            width: 100%;
+            height: 100%;
+            position: absolute;
+            top: 0;
+            left: 0;
+            z-index: 1;
+            touch-action: none;
+        }
+
+        /* =================================
+           TELA INICIAL MOBILE-FIRST
+        ================================= */
+        
+        .enhanced-start-screen {
+            background: linear-gradient(135deg, #1a365d 0%, #2c5282 50%, #3182ce 100%);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .floating-math-bg {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            z-index: 1;
+        }
+
+        .floating-math-bg::before {
+            content: "π + - × ÷ = √ ∞";
+            position: absolute;
+            top: -20%;
+            left: -10%;
+            width: 120%;
+            height: 140%;
+            font-size: 2rem;
+            color: rgba(255, 255, 255, 0.05);
+            font-family: 'Press Start 2P', cursive;
+            word-spacing: 1.5rem;
+            line-height: 3rem;
+            animation: float-symbols 20s linear infinite;
+            pointer-events: none;
+        }
+
+        @keyframes float-symbols {
+            0% { transform: translateY(100vh) rotate(0deg); }
+            100% { transform: translateY(-100vh) rotate(360deg); }
+        }
+
+        .floating-math-bg::after {
+            content: "∞ π ∑ ± ≈ θ λ";
+            position: absolute;
+            top: -30%;
+            right: -5%;
+            width: 110%;
+            height: 160%;
+            font-size: 1.5rem;
+            color: rgba(255, 255, 255, 0.03);
+            font-family: 'Press Start 2P', cursive;
+            word-spacing: 2rem;
+            line-height: 2.5rem;
+            animation: float-symbols-reverse 25s linear infinite;
+            pointer-events: none;
+        }
+
+        @keyframes float-symbols-reverse {
+            0% { transform: translateY(-100vh) rotate(360deg); }
+            100% { transform: translateY(100vh) rotate(0deg); }
+        }
+
+        .content-wrapper {
+            position: relative;
+            z-index: 2;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100%;
+            padding: 1rem;
+            animation: fade-in-up 1s ease-out;
+        }
+
+        @keyframes fade-in-up {
+            0% {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            100% {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* LOGO - Mobile First */
+        .logo-container {
+            margin-bottom: 1rem;
+            animation: logo-entrance 1.5s ease-out 0.3s both;
+        }
+
+        @keyframes logo-entrance {
+            0% {
+                opacity: 0;
+                transform: scale(0.8) rotateY(20deg);
+            }
+            100% {
+                opacity: 1;
+                transform: scale(1) rotateY(0deg);
+            }
+        }
+
+        .main-logo {
+            max-width: 250px;
+            max-height: 125px;
+            width: 90vw;
+            height: auto;
+            filter: drop-shadow(0 5px 15px rgba(0,0,0,0.3));
+            transition: transform 0.3s ease;
+        }
+
+        .main-logo:hover {
+            transform: scale(1.05) rotateZ(2deg);
+        }
+
+        /* TEXTOS - Mobile First */
+        .game-description {
+            text-align: center;
+            margin-bottom: 1rem;
+            animation: slide-in-left 1s ease-out 0.6s both;
+        }
+
+        @keyframes slide-in-left {
+            0% {
+                opacity: 0;
+                transform: translateX(-50px);
+            }
+            100% {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        .subtitle {
+            font-size: 1.2rem;
+            color: #f59e0b;
+            margin-bottom: 0.8rem;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+            font-weight: bold;
+            line-height: 1.4;
+        }
+
+        .description-text {
+            font-size: 0.7rem;
+            color: #e2e8f0;
+            line-height: 1.6;
+            max-width: 300px;
+            margin: 0 auto;
+        }
+
+        .description-text kbd {
+            background: linear-gradient(145deg, #4a5568, #2d3748);
+            color: #ffd700;
+            padding: 2px 4px;
+            border-radius: 3px;
+            font-size: 0.6rem;
+            border: 1px solid #718096;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+        }
+
+        /* BADGE BNCC - Mobile First */
+        .bncc-badge {
+            display: flex;
+            align-items: center;
+            background: linear-gradient(145deg, rgba(59, 130, 246, 0.2), rgba(37, 99, 235, 0.3));
+            border: 2px solid rgba(59, 130, 246, 0.4);
+            border-radius: 10px;
+            padding: 0.8rem 1rem;
+            margin-bottom: 1rem;
+            backdrop-filter: blur(10px);
+            animation: slide-in-right 1s ease-out 0.9s both;
+            max-width: 320px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        @keyframes slide-in-right {
+            0% {
+                opacity: 0;
+                transform: translateX(50px);
+            }
+            100% {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        .badge-icon {
+            font-size: 1.2rem;
+            margin-right: 0.6rem;
+            animation: bounce 2s infinite;
+        }
+
+        @keyframes bounce {
+            0%, 20%, 50%, 80%, 100% {
+                transform: translateY(0);
+            }
+            40% {
+                transform: translateY(-10px);
+            }
+            60% {
+                transform: translateY(-5px);
+            }
+        }
+
+        .badge-description {
+            font-size: 0.6rem;
+            color: #bfdbfe;
+            line-height: 1.4;
+            text-align: center;
+        }
+
+        /* BOTÃO INICIAR - Mobile First */
+        .start-controls {
+            margin-bottom: 1rem;
+            animation: scale-in 1s ease-out 1.2s both;
+        }
+
+        @keyframes scale-in {
+            0% {
+                opacity: 0;
+                transform: scale(0.5);
+            }
+            100% {
+                opacity: 1;
+                transform: scale(1);
+            }
+        }
+
+        .enhanced-start-btn {
+            position: relative;
+            display: flex;
+            align-items: center;
+            gap: 0.8rem;
+            background: linear-gradient(145deg, #f59e0b, #d97706);
+            color: white;
+            border: none;
+            padding: 1rem 2rem;
+            border-radius: 50px;
+            font-family: 'Press Start 2P', cursive;
+            font-size: 0.8rem;
+            cursor: pointer;
+            box-shadow: 0 8px 20px rgba(245, 158, 11, 0.4);
+            transition: all 0.3s ease;
+            overflow: hidden;
+            touch-action: manipulation;
+        }
+
+        .enhanced-start-btn:hover,
+        .enhanced-start-btn:active {
+            transform: translateY(-2px) scale(1.02);
+            box-shadow: 0 10px 25px rgba(245, 158, 11, 0.6);
+        }
+
+        .btn-icon {
+            font-size: 1rem;
+            animation: pulse 1.5s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% {
+                transform: scale(1);
+            }
+            50% {
+                transform: scale(1.1);
+            }
+        }
+
+        .btn-text {
+            position: relative;
+            z-index: 2;
+        }
+
+        .btn-shine {
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
+            transition: left 0.5s;
+        }
+
+        .enhanced-start-btn:hover .btn-shine {
+            left: 100%;
+        }
+
+        /* CARACTERÍSTICAS DO JOGO - Mobile First */
+        .game-features {
+            display: flex;
+            justify-content: center;
+            gap: 1rem;
+            flex-wrap: wrap;
+            animation: fade-in-up 1s ease-out 1.5s both;
+        }
+
+        .feature {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 10px;
+            padding: 0.8rem;
+            min-width: 90px;
+            backdrop-filter: blur(10px);
+            transition: all 0.3s ease;
+        }
+
+        .feature:hover {
+            transform: translateY(-3px);
+            background: rgba(255, 255, 255, 0.15);
+        }
+
+        .feature-icon {
+            font-size: 1.2rem;
+            margin-bottom: 0.3rem;
+        }
+
+        .feature span {
+            font-size: 0.5rem;
+            text-align: center;
+            line-height: 1.2;
+        }
+
+        /* =================================
+           CONTROLES TOUCH ON-SCREEN
+        ================================= */
+        
+        .touch-controls {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 120px;
+            z-index: 30;
+            display: none;
+            background: linear-gradient(to top, rgba(0,0,0,0.8), transparent);
+            backdrop-filter: blur(5px);
+        }
+
+        .touch-controls.show {
+            display: block;
+        }
+
+        .touch-btn {
+            position: absolute;
+            background: rgba(255, 255, 255, 0.2);
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            color: white;
+            font-family: 'Press Start 2P', cursive;
+            font-size: 1rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s ease;
+            touch-action: manipulation;
+            user-select: none;
+        }
+
+        .touch-btn:active {
+            background: rgba(255, 255, 255, 0.4);
+            transform: scale(0.95);
+        }
+
+        .touch-btn-left {
+            bottom: 20px;
+            left: 20px;
+            width: 60px;
+            height: 60px;
+        }
+
+        .touch-btn-right {
+            bottom: 20px;
+            left: 100px;
+            width: 60px;
+            height: 60px;
+        }
+
+        .touch-btn-jump {
+            bottom: 20px;
+            right: 20px;
+            width: 70px;
+            height: 70px;
+            background: rgba(245, 158, 11, 0.8);
+            border: 2px solid rgba(245, 158, 11, 1);
+        }
+
+        .touch-btn-duck {
+            bottom: 20px;
+            right: 110px;
+            width: 50px;
+            height: 50px;
+        }
+
+        /* =================================
+           INTERFACE DO JOGO
+        ================================= */
+        
+        .game-info {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            right: 10px;
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.8rem;
+            color: white;
+            z-index: 20;
+            background: rgba(0,0,0,0.5);
+            padding: 0.5rem;
+            border-radius: 8px;
+            backdrop-filter: blur(5px);
+        }
+
+        .question-display {
+            position: absolute;
+            bottom: 140px;
+            left: 10px;
+            right: 10px;
+            font-size: 1rem;
+            color: white;
+            background-color: rgba(0,0,0,0.8);
+            padding: 1rem;
+            border-radius: 10px;
+            z-index: 20;
+            text-align: center;
+            backdrop-filter: blur(10px);
+            border: 2px solid rgba(255,255,255,0.2);
+        }
+
+        .feedback-text {
+            position: absolute;
+            top: 40%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 1.5rem;
+            font-weight: bold;
+            opacity: 0;
+            transition: opacity 0.5s ease-out, transform 0.5s ease-out;
+            z-index: 25;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.8);
+        }
+
+        .feedback-text.show {
+            opacity: 1;
+            transform: translate(-50%, -70%);
+        }
+
+        .feedback-text.correct {
+            color: #48bb78;
+        }
+
+        .feedback-text.incorrect {
+            color: #f56565;
+        }
+
+        /* TELA GAME OVER - Mobile First */
+        #gameOverScreen {
+            background: linear-gradient(135deg, #1a202c 0%, #2d3748 100%);
+        }
+
+        #gameOverScreen h2 {
+            font-size: 1.5rem;
+            margin-bottom: 1rem;
+            color: #f59e0b;
+        }
+
+        #gameOverScreen p {
+            font-size: 1rem;
+            margin-bottom: 2rem;
+        }
+
+        #restartButton {
+            font-family: 'Press Start 2P', cursive;
+            background: linear-gradient(145deg, #f59e0b, #d97706);
+            color: white;
+            padding: 1rem 2rem;
+            border-radius: 50px;
+            border: none;
+            cursor: pointer;
+            font-size: 0.8rem;
+            box-shadow: 0 8px 20px rgba(245, 158, 11, 0.4);
+            transition: all 0.3s ease;
+            touch-action: manipulation;
+        }
+
+        #restartButton:hover,
+        #restartButton:active {
+            transform: translateY(-2px) scale(1.05);
+            box-shadow: 0 12px 30px rgba(245, 158, 11, 0.6);
+        }
+
+        /* =================================
+           TABLETS - MIN-WIDTH: 768px
+        ================================= */
+        
+        @media (min-width: 768px) {
+            .content-wrapper {
+                padding: 2rem;
+            }
+            
+            .main-logo {
+                max-width: 350px;
+                max-height: 175px;
+            }
+            
+            .subtitle {
+                font-size: 1.8rem;
+                margin-bottom: 1.2rem;
+            }
+            
+            .description-text {
+                font-size: 1rem;
+                max-width: 500px;
+            }
+            
+            .description-text kbd {
+                font-size: 0.8rem;
+                padding: 3px 6px;
+            }
+            
+            .bncc-badge {
+                padding: 1rem 1.5rem;
+                max-width: 500px;
+            }
+            
+            .badge-icon {
+                font-size: 1.8rem;
+                margin-right: 0.8rem;
+            }
+            
+            .badge-description {
+                font-size: 0.8rem;
+            }
+            
+            .enhanced-start-btn {
+                font-size: 1rem;
+                padding: 1.2rem 2.5rem;
+                gap: 1rem;
+            }
+            
+            .btn-icon {
+                font-size: 1.2rem;
+            }
+            
+            .feature {
+                padding: 1rem;
+                min-width: 140px;
+            }
+            
+            .feature-icon {
+                font-size: 1.5rem;
+            }
+            
+            .feature span {
+                font-size: 0.7rem;
+            }
+            
+            .game-info {
+                font-size: 1rem;
+            }
+            
+            .question-display {
+                font-size: 1.2rem;
+                bottom: 20px;
+            }
+            
+            .touch-controls {
+                display: none !important;
+            }
+        }
+
+        /* =================================
+           DESKTOP - MIN-WIDTH: 1024px
+        ================================= */
+        
+        @media (min-width: 1024px) {
+            .content-wrapper {
+                max-width: 900px;
+                margin: 0 auto;
+            }
+            
+            .main-logo {
+                max-width: 400px;
+                max-height: 200px;
+            }
+            
+            .subtitle {
+                font-size: 2.2rem;
+                margin-bottom: 1.5rem;
+            }
+            
+            .description-text {
+                font-size: 1.3rem;
+                max-width: 600px;
+            }
+            
+            .description-text kbd {
+                font-size: 0.9rem;
+            }
+            
+            .bncc-badge {
+                padding: 1.2rem 2rem;
+                margin-bottom: 2.5rem;
+                max-width: 600px;
+            }
+            
+            .badge-icon {
+                font-size: 2.2rem;
+                margin-right: 1rem;
+            }
+            
+            .badge-description {
+                font-size: 0.85rem;
+            }
+            
+            .enhanced-start-btn {
+                font-size: 1.3rem;
+                padding: 1.5rem 3rem;
+            }
+            
+            .btn-icon {
+                font-size: 1.5rem;
+            }
+            
+            .start-controls {
+                margin-bottom: 2rem;
+            }
+            
+            .game-features {
+                gap: 2rem;
+            }
+            
+            .feature {
+                padding: 1.5rem;
+                min-width: 160px;
+            }
+            
+            .feature-icon {
+                font-size: 2rem;
+                margin-bottom: 0.5rem;
+            }
+            
+            .feature span {
+                font-size: 0.8rem;
+            }
+            
+            .floating-math-bg::before {
+                font-size: 4rem;
+                word-spacing: 3rem;
+                line-height: 6rem;
+            }
+            
+            .floating-math-bg::after {
+                font-size: 3rem;
+                word-spacing: 4rem;
+                line-height: 5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="game-container">
+        <div id="startScreen" class="screen enhanced-start-screen">
+            <div class="floating-math-bg"></div>
+            <div class="content-wrapper">
+                <div class="logo-container">
+                    <img src="logo.png?v=2" alt="Num Rush Logo" class="main-logo">
+                </div>
+                
+                <div class="game-description">
+                    <h2 class="subtitle">NumRush: Aventura Matemática</h2>
+                    <p class="description-text">
+                        Corra, pule e resolva equações matemáticas! 
+                        Use os controles na tela ou <kbd>ESPAÇO</kbd>/<kbd>W</kbd> para pular, <kbd>←→</kbd>/<kbd>A D</kbd> para mover, e <kbd>S</kbd> para agachar.
+                    </p>
+                </div>
+                
+                <div class="bncc-badge">
+                    <div class="badge-icon">🎓</div>
+                    <div class="badge-text">
+                        <span class="badge-description">Jogo desenvolvido de acordo com a Base Nacional Comum Curricular (BNCC), promovendo habilidades essenciais por meio de atividades interativas.</span>
+                    </div>
+                </div>
+                
+                <div class="start-controls">
+                    <button id="startButton" class="enhanced-start-btn">
+                        <span class="btn-icon">🎮</span>
+                        <span class="btn-text">Iniciar Aventura</span>
+                        <div class="btn-shine"></div>
+                    </button>
+                </div>
+                
+                <div class="game-features">
+                    <div class="feature">
+                        <div class="feature-icon">📱</div>
+                        <span>Mobile First</span>
+                    </div>
+                    <div class="feature">
+                        <div class="feature-icon">🧮</div>
+                        <span>Matemática Divertida</span>
+                    </div>
+                    <div class="feature">
+                        <div class="feature-icon">🏃‍♂️</div>
+                        <span>Ação e Aventura</span>
+                    </div>
+                    <div class="feature">
+                        <div class="feature-icon">🎯</div>
+                        <span>Desafios Progressivos</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div id="gameScreenContainer" class="screen hidden">
+             <canvas id="gameCanvas"></canvas> 
+        </div>
+        
+        <!-- CONTROLES TOUCH ON-SCREEN -->
+        <div id="touchControls" class="touch-controls">
+            <button class="touch-btn touch-btn-left" id="touchLeft">←</button>
+            <button class="touch-btn touch-btn-right" id="touchRight">→</button>
+            <button class="touch-btn touch-btn-duck" id="touchDuck">↓</button>
+            <button class="touch-btn touch-btn-jump" id="touchJump">↑</button>
+        </div>
+        
+        <div id="gameUI" class="hidden">
+            <div class="game-info">
+                <span id="scoreDisplay">Pontos: 0</span>
+                <span id="livesDisplay">Vidas: 3</span>
+            </div>
+            <div id="questionDisplay" class="question-display">5 + 3 = ?</div>
+            <div id="feedbackText" class="feedback-text"></div>
+        </div>
+
+        <div id="gameOverScreen" class="screen hidden">
+            <h2>Fim de Jogo!</h2>
+            <p id="finalScoreDisplay">Sua pontuação: 0</p>
+            <button id="restartButton">Jogar Novamente</button>
+        </div>
+    </div>
+
+    <script>
+        // Elementos da UI
+        const startScreen = document.getElementById('startScreen');
+        const gameScreenContainer = document.getElementById('gameScreenContainer');
+        const gameUI = document.getElementById('gameUI');
+        const gameOverScreen = document.getElementById('gameOverScreen');
+        const startButton = document.getElementById('startButton');
+        const restartButton = document.getElementById('restartButton');
+        const canvas = document.getElementById('gameCanvas'); 
+        
+        const scoreDisplay = document.getElementById('scoreDisplay');
+        const livesDisplay = document.getElementById('livesDisplay');
+        const questionDisplay = document.getElementById('questionDisplay');
+        const finalScoreDisplay = document.getElementById('finalScoreDisplay');
+        const feedbackText = document.getElementById('feedbackText');
+
+        // Configurações do Jogo
+        const LANE_COUNT = 3; 
+        const INITIAL_LIVES = 3;
+        const QUESTION_DURATION_INITIAL = 9000; 
+        const QUESTION_DURATION_MIN = 4000;    
+        const QUESTION_DURATION_DECREMENT = 250; 
+        const POINTS_FOR_DECREMENT = 30;
+        const NEXT_QUESTION_DELAY = 3000;
+        const QUESTION_TO_ANSWERS_DELAY = 2000; // Delay entre mostrar pergunta e respostas
+
+        // Variáveis de Estado do Jogo
+        let gameState = 'start';
+        let score = 0;
+        let lives = INITIAL_LIVES;
+        let characterLane = 1; 
+        let currentQuestion = null;
+        let questionTimer = 0;
+        let currentQuestionDuration = QUESTION_DURATION_INITIAL;
+        let laneAnswers = [];
+        let answersVisible = false; // Controla se as respostas já estão visíveis
+        let isDucking = false; // Nova variável para controlar agachamento
+
+        // Three.js Variáveis
+        let scene, camera, renderer;
+        let characterGroup; 
+        const laneMeshes = []; 
+        const answerBoxes = []; 
+        let skydome;
+        // const sideElements = []; // removido 
+        const floatingElements = [];
+        let starParticles;
+        let shirtMaterial; 
+        const activeExplosions = [];
+        const dustParticles = []; // Partículas de poeira ao correr 
+        const pixelMathElements = []; // Elementos matemáticos pixelados
+        const PIXEL_MATH_COUNT = 25; // Quantidade de elementos matemáticos
+        
+        // Constantes do Personagem e Pulo
+        const CHARACTER_HEAD_RADIUS = 0.22;
+        const CHARACTER_TRUNK_HEIGHT = 0.65;
+        const CHARACTER_TRUNK_RADIUS = 0.20;
+        const CHARACTER_LIMB_RADIUS = 0.08;
+        const CHARACTER_ARM_LENGTH = 0.45;
+        const CHARACTER_LEG_LENGTH = 0.55;
+        
+        const JUMP_VELOCITY_INITIAL = 9.8; 
+        const GRAVITY = 30; 
+        let isJumping = false;
+        let jumpVelocityY = 0;
+        
+        const LANE_WIDTH_VISUAL = 2.5; 
+        const LANE_DEPTH = 60; 
+        const LANE_SEGMENTS = 2; 
+        const GAME_SPEED = 4; 
+        // const SIDE_ELEMENT_COUNT = 15; // removido com os elementos laterais 
+        const FLOATING_ELEMENT_COUNT = 10;
+        const STAR_COUNT = 300;
+        
+        const ANSWER_BOX_SIZE = { width: LANE_WIDTH_VISUAL * 0.6, height: 0.8, depth: 0.4 }; 
+        const ANSWER_BOX_Y_CENTER = 2.7; 
+        const ANSWER_BOX_SPACING = ANSWER_BOX_SIZE.width * 1.8; 
+
+        // Variáveis de céu removidas (céu agora tem cores fixas)
+
+
+        function initThreeJS() {
+            console.log("DEBUG: initThreeJS called");
+            console.log("DEBUG: Creating scene...");
+            scene = new THREE.Scene();
+            console.log("DEBUG: Scene created successfully");
+
+            console.log("DEBUG: Creating camera...");
+            camera = new THREE.PerspectiveCamera(75, (canvas.clientWidth || 1) / (canvas.clientHeight || 1), 0.1, 2000); 
+            camera.position.set(0, 2.5, 5); 
+            camera.lookAt(0, 1.0, 0); 
+            console.log("DEBUG: Camera created successfully");
+
+            console.log("DEBUG: Creating renderer...");
+            renderer = new THREE.WebGLRenderer({ canvas: canvas, antialias: true });
+            renderer.setSize(canvas.clientWidth || 300, canvas.clientHeight || 150); 
+            if (canvas.clientWidth === 0 || canvas.clientHeight === 0) {
+                console.warn("DEBUG: Canvas dimensions are zero during initThreeJS. Using fallback dimensions.");
+            }
+            renderer.shadowMap.enabled = true;
+            renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+            console.log("DEBUG: Renderer configured successfully"); 
+
+            // ILUMINAÇÃO CINEMATOGRÁFICA AVANÇADA
+            console.log("DEBUG: Setting up lighting...");
+            // Luz ambiente suave
+            const ambientLight = new THREE.AmbientLight(0xfff8e1, 0.6);
+            scene.add(ambientLight);
+            
+            // Luz principal (sol)
+            const sunLight = new THREE.DirectionalLight(0xffffff, 0.8);
+            sunLight.position.set(15, 20, 10);
+            sunLight.castShadow = true;
+            sunLight.shadow.mapSize.width = 2048;
+            sunLight.shadow.mapSize.height = 2048;
+            sunLight.shadow.camera.near = 0.5;
+            sunLight.shadow.camera.far = 100;
+            sunLight.shadow.camera.left = -50;
+            sunLight.shadow.camera.right = 50;
+            sunLight.shadow.camera.top = 50;
+            sunLight.shadow.camera.bottom = -50;
+            sunLight.shadow.bias = -0.0005;
+            scene.add(sunLight);
+            
+            // Luz de preenchimento azulada (céu)
+            const skyLight = new THREE.DirectionalLight(0x87ceeb, 0.4);
+            skyLight.position.set(-10, 15, -5);
+            scene.add(skyLight);
+            
+            // Luz traseira para contorno
+            const rimLight = new THREE.DirectionalLight(0xffa726, 0.3);
+            rimLight.position.set(0, 8, -20);
+            scene.add(rimLight);
+            
+            // Holofote focado na pista
+            const trackSpotlight = new THREE.SpotLight(0xffffff, 0.6);
+            trackSpotlight.position.set(0, 15, 10);
+            trackSpotlight.target.position.set(0, 0, -10);
+            trackSpotlight.angle = Math.PI / 8;
+            trackSpotlight.penumbra = 0.4;
+            trackSpotlight.decay = 1.5;
+            trackSpotlight.distance = 50;
+            trackSpotlight.castShadow = true;
+            scene.add(trackSpotlight);
+            scene.add(trackSpotlight.target);
+            console.log("DEBUG: Lighting setup complete");
+            
+            console.log("DEBUG: Creating sky...");
+            const skyGeometry = new THREE.SphereGeometry(1000, 32, 15); 
+            const skyShaderMaterial = new THREE.ShaderMaterial({
+                uniforms: {
+                    topColor: { value: new THREE.Color(0x87ceeb) }, // Azul céu
+                    bottomColor: { value: new THREE.Color(0xffd700) }, // Dourado no horizonte
+                    offset: { value: 33 },
+                    exponent: { value: 0.8 }
+                },
+                vertexShader: `
+                    varying vec3 vWorldPosition;
+                    void main() {
+                        vec4 worldPosition = modelMatrix * vec4( position, 1.0 );
+                        vWorldPosition = worldPosition.xyz;
+                        gl_Position = projectionMatrix * modelViewMatrix * vec4( position, 1.0 );
+                    }
+                `,
+                fragmentShader: `
+                    uniform vec3 topColor;
+                    uniform vec3 bottomColor;
+                    uniform float offset;
+                    uniform float exponent;
+                    varying vec3 vWorldPosition;
+                    void main() {
+                        float h = normalize( vWorldPosition + offset ).y;
+                        gl_FragColor = vec4( mix( bottomColor, topColor, max( pow( max( h , 0.0), exponent ), 0.0 ) ), 1.0 );
+                    }
+                `,
+                side: THREE.BackSide 
+            });
+            skydome = new THREE.Mesh(skyGeometry, skyShaderMaterial);
+            scene.add(skydome);
+            console.log("DEBUG: Sky created successfully");
+
+            console.log("DEBUG: Creating character...");
+            characterGroup = new THREE.Group();
+            const skinMaterial = new THREE.MeshStandardMaterial({ color: 0xffdba1, roughness: 0.8, metalness: 0.1 });
+            shirtMaterial = new THREE.MeshStandardMaterial({ color: 0x3b82f6, roughness: 0.7, metalness: 0.1 }); 
+            const pantsMaterial = new THREE.MeshStandardMaterial({ color: 0x1e40af, roughness: 0.7, metalness: 0.1 });
+
+            const headGeometry = new THREE.SphereGeometry(CHARACTER_HEAD_RADIUS, 20, 16);
+            const characterHead = new THREE.Mesh(headGeometry, skinMaterial);
+            characterHead.castShadow = true;
+            characterHead.position.y = CHARACTER_LEG_LENGTH + CHARACTER_TRUNK_HEIGHT / 2 + CHARACTER_HEAD_RADIUS * 1.2;
+            characterGroup.add(characterHead);
+
+            const trunkGeometry = new THREE.CylinderGeometry(CHARACTER_TRUNK_RADIUS, CHARACTER_TRUNK_RADIUS, CHARACTER_TRUNK_HEIGHT, 20);
+            const characterTrunk = new THREE.Mesh(trunkGeometry, shirtMaterial);
+            characterTrunk.name = "characterTrunkMesh"; 
+            characterTrunk.castShadow = true;
+            characterTrunk.position.y = CHARACTER_LEG_LENGTH; 
+            characterGroup.add(characterTrunk);
+
+            const armGeometry = new THREE.CylinderGeometry(CHARACTER_LIMB_RADIUS, CHARACTER_LIMB_RADIUS * 0.8, CHARACTER_ARM_LENGTH, 12);
+            const leftArm = new THREE.Mesh(armGeometry, shirtMaterial); 
+            leftArm.castShadow = true; 
+            leftArm.position.set(-CHARACTER_TRUNK_RADIUS - CHARACTER_LIMB_RADIUS * 0.5, CHARACTER_LEG_LENGTH + CHARACTER_TRUNK_HEIGHT * 0.3, 0); 
+            leftArm.rotation.z = Math.PI / 6; 
+            const rightArm = new THREE.Mesh(armGeometry, shirtMaterial); 
+            rightArm.castShadow = true; 
+            rightArm.position.set(CHARACTER_TRUNK_RADIUS + CHARACTER_LIMB_RADIUS * 0.5, CHARACTER_LEG_LENGTH + CHARACTER_TRUNK_HEIGHT * 0.3, 0); 
+            rightArm.rotation.z = -Math.PI / 6; 
+            characterGroup.add(leftArm); characterGroup.add(rightArm); 
+
+            const legGeometry = new THREE.CylinderGeometry(CHARACTER_LIMB_RADIUS * 1.1, CHARACTER_LIMB_RADIUS * 0.9, CHARACTER_LEG_LENGTH, 12);
+            const leftLeg = new THREE.Mesh(legGeometry, pantsMaterial); 
+            leftLeg.castShadow = true; 
+            leftLeg.position.set(-CHARACTER_TRUNK_RADIUS * 0.5, CHARACTER_LEG_LENGTH / 2, 0); 
+            const rightLeg = new THREE.Mesh(legGeometry, pantsMaterial); 
+            rightLeg.castShadow = true; 
+            rightLeg.position.set(CHARACTER_TRUNK_RADIUS * 0.5, CHARACTER_LEG_LENGTH / 2, 0); 
+            characterGroup.add(leftLeg); characterGroup.add(rightLeg); 
+            
+            characterGroup.position.z = 1.5; 
+            characterGroup.position.y = 0; 
+            scene.add(characterGroup);
+            console.log("DEBUG: Character created successfully");
+
+            // PISTA PRINCIPAL APRIMORADA
+            console.log("DEBUG: Creating track...");
+            const groundLaneWidth = LANE_WIDTH_VISUAL * LANE_COUNT + ANSWER_BOX_SPACING * (LANE_COUNT -1) + LANE_WIDTH_VISUAL;
+            
+            // Criar textura de pista realista
+            console.log("DEBUG: Creating track texture...");
+            const textureCanvas = document.createElement('canvas');
+            textureCanvas.width = 512;
+            textureCanvas.height = 512;
+            const ctx = textureCanvas.getContext('2d');
+            console.log("DEBUG: Canvas context created");
+            
+            // Fundo da pista (asfalto)
+            ctx.fillStyle = '#e8e8e8';
+            ctx.fillRect(0, 0, 512, 512);
+            
+            // Adicionar textura de asfalto
+            for (let i = 0; i < 1000; i++) {
+                ctx.fillStyle = `rgba(${200 + Math.random() * 40}, ${200 + Math.random() * 40}, ${200 + Math.random() * 40}, 0.3)`;
+                ctx.fillRect(Math.random() * 512, Math.random() * 512, 2, 2);
+            }
+            
+            // Adicionar linhas de junção
+            for (let y = 0; y < 512; y += 64) {
+                ctx.strokeStyle = '#d0d0d0';
+                ctx.lineWidth = 1;
+                ctx.beginPath();
+                ctx.moveTo(0, y);
+                ctx.lineTo(512, y);
+                ctx.stroke();
+            }
+            
+            const trackTexture = new THREE.CanvasTexture(textureCanvas);
+            trackTexture.wrapS = THREE.RepeatWrapping;
+            trackTexture.wrapT = THREE.RepeatWrapping;
+            trackTexture.repeat.set(2, 8);
+            
+            const trackMaterial = new THREE.MeshStandardMaterial({
+                map: trackTexture,
+                color: 0xf5f5f5,
+                roughness: 0.6,
+                metalness: 0.05
+            });
+            
+            const groundLaneGeo = new THREE.BoxGeometry(groundLaneWidth, 0.2, LANE_DEPTH);
+            
+            for (let j = 0; j < LANE_SEGMENTS; j++) { 
+                const groundLane = new THREE.Mesh(groundLaneGeo, trackMaterial.clone());
+                groundLane.position.set(0, -0.1, -LANE_DEPTH / 2 + (characterGroup ? characterGroup.position.z : 1.5) + 10 - (j * LANE_DEPTH));
+                groundLane.receiveShadow = true;
+                
+                // Linhas divisórias das lanes mais visíveis
+                for (let lane = 0; lane <= LANE_COUNT; lane++) {
+                    const lineX = -groundLaneWidth/2 + (lane * (groundLaneWidth / LANE_COUNT));
+                    
+                    const lineGeometry = new THREE.BoxGeometry(0.15, 0.05, LANE_DEPTH);
+                    const lineMaterial = new THREE.MeshStandardMaterial({ 
+                        color: 0xffeb3b,
+                        emissive: 0xffc107,
+                        emissiveIntensity: 0.4
+                    });
+                    const line = new THREE.Mesh(lineGeometry, lineMaterial);
+                    line.position.set(lineX, 0.03, 0);
+                    groundLane.add(line);
+                }
+                
+                // Números das lanes
+                for (let lane = 0; lane < LANE_COUNT; lane++) {
+                    const laneNumber = lane + 1;
+                    const laneX = -groundLaneWidth/2 + (lane * (groundLaneWidth / LANE_COUNT)) + (groundLaneWidth / LANE_COUNT / 2);
+                    
+                    const numberTexture = createTextTexture(laneNumber.toString(), 128, 128, 48, 'rgba(66, 165, 245, 0.9)', 'white');
+                    const numberGeometry = new THREE.PlaneGeometry(2, 2);
+                    const numberMaterial = new THREE.MeshBasicMaterial({ 
+                        map: numberTexture, 
+                        transparent: true,
+                        opacity: 0.8
+                    });
+                    const numberMesh = new THREE.Mesh(numberGeometry, numberMaterial);
+                    numberMesh.rotation.x = -Math.PI / 2;
+                    numberMesh.position.set(laneX, 0.05, LANE_DEPTH * 0.3);
+                    groundLane.add(numberMesh);
+                }
+                
+                // Bordas elevadas nas laterais
+                const borderHeight = 0.5;
+                const borderWidth = 0.3;
+                
+                for (let side = 0; side < 2; side++) {
+                    const borderGeometry = new THREE.BoxGeometry(borderWidth, borderHeight, LANE_DEPTH);
+                    const borderMaterial = new THREE.MeshStandardMaterial({
+                        color: 0x2196f3,
+                        roughness: 0.4,
+                        metalness: 0.1
+                    });
+                    const border = new THREE.Mesh(borderGeometry, borderMaterial);
+                    
+                    const borderX = (side === 0 ? -1 : 1) * (groundLaneWidth/2 + borderWidth/2);
+                    border.position.set(borderX, borderHeight/2, 0);
+                    border.castShadow = true;
+                    border.receiveShadow = true;
+                    groundLane.add(border);
+                }
+                
+                scene.add(groundLane);
+                laneMeshes.push(groundLane);
+            }
+
+            // Caixas de resposta com bordas arredondadas (simuladas)
+            const answerBoxGeometry = new THREE.BoxGeometry(ANSWER_BOX_SIZE.width, ANSWER_BOX_SIZE.height, ANSWER_BOX_SIZE.depth);
+            for (let i = 0; i < LANE_COUNT; i++) { 
+                const xPosition = (i - (LANE_COUNT - 1) / 2) * ANSWER_BOX_SPACING;
+                
+                // Material estilo quadro escolar
+                const answerMaterial = new THREE.MeshStandardMaterial({ 
+                    map: createTextTexture("?"), 
+                    transparent: true, 
+                    color: 0xffffff,
+                    emissive: 0x2e7d32, // Verde escolar
+                    emissiveIntensity: 0.15,
+                    roughness: 0.7,
+                    metalness: 0.05
+                });
+                
+                const answerBox = new THREE.Mesh(answerBoxGeometry, answerMaterial);
+                answerBox.name = `answerBox_${i}`; 
+                answerBox.userData = { answerIndex: i }; 
+                answerBox.position.set(xPosition, ANSWER_BOX_Y_CENTER, -8 - Math.random() * 3);
+                answerBox.castShadow = true;
+                
+                // Adicionar borda estilo giz
+                const edgeGeometry = new THREE.EdgesGeometry(answerBoxGeometry);
+                const edgeMaterial = new THREE.LineBasicMaterial({ color: 0x66bb6a, linewidth: 2 });
+                const edges = new THREE.LineSegments(edgeGeometry, edgeMaterial);
+                answerBox.add(edges);
+                
+                scene.add(answerBox);
+                answerBoxes.push(answerBox);
+            }
+
+            // Elementos laterais 3D removidos por solicitação do usuário
+
+            // Elementos educativos flutuantes
+            for (let i = 0; i < FLOATING_ELEMENT_COUNT; i++) {
+                const elementType = Math.floor(Math.random() * 4);
+                let floatingObj;
+                
+                if (elementType === 0) {
+                    // Números flutuantes
+                    const numberGeo = new THREE.BoxGeometry(1.5, 1.5, 0.3);
+                    const numberMat = new THREE.MeshStandardMaterial({ 
+                        color: 0x4caf50,
+                        emissive: 0x2e7d32,
+                        emissiveIntensity: 0.3
+                    });
+                    floatingObj = new THREE.Mesh(numberGeo, numberMat);
+                    
+                    // Adicionar texto do número
+                    const num = Math.floor(Math.random() * 10);
+                    const numTexture = createTextTexture(num.toString(), 64, 64, 30, 'rgba(255,255,255,0.9)', '#1b5e20');
+                    const numMesh = new THREE.Mesh(
+                        new THREE.PlaneGeometry(1.2, 1.2),
+                        new THREE.MeshBasicMaterial({ map: numTexture, transparent: true })
+                    );
+                    numMesh.position.z = 0.16;
+                    floatingObj.add(numMesh);
+                    
+                } else if (elementType === 1) {
+                    // Símbolos matemáticos
+                    const symbolGeo = new THREE.CylinderGeometry(0.8, 0.8, 0.3, 16);
+                    const symbolMat = new THREE.MeshStandardMaterial({ 
+                        color: 0xff9800,
+                        emissive: 0xf57c00,
+                        emissiveIntensity: 0.3
+                    });
+                    floatingObj = new THREE.Mesh(symbolGeo, symbolMat);
+                    floatingObj.rotation.x = Math.PI / 2;
+                    
+                } else if (elementType === 2) {
+                    // Lápis gigante
+                    const pencilGroup = new THREE.Group();
+                    const pencilBody = new THREE.Mesh(
+                        new THREE.CylinderGeometry(0.3, 0.3, 2, 8),
+                        new THREE.MeshStandardMaterial({ color: 0xffd54f })
+                    );
+                    const pencilTip = new THREE.Mesh(
+                        new THREE.ConeGeometry(0.3, 0.5, 8),
+                        new THREE.MeshStandardMaterial({ color: 0x424242 })
+                    );
+                    pencilTip.position.y = 1.25;
+                    pencilGroup.add(pencilBody);
+                    pencilGroup.add(pencilTip);
+                    floatingObj = pencilGroup;
+                    
+                } else {
+                    // Globo terrestre
+                    const globeGeo = new THREE.SphereGeometry(1, 16, 12);
+                    const globeMat = new THREE.MeshStandardMaterial({ 
+                        color: 0x2196f3,
+                        emissive: 0x1565c0,
+                        emissiveIntensity: 0.2,
+                        roughness: 0.3
+                    });
+                    floatingObj = new THREE.Mesh(globeGeo, globeMat);
+                }
+
+                floatingObj.position.set(
+                    (Math.random() - 0.5) * 40, 
+                    5 + Math.random() * 10,     
+                    -LANE_DEPTH - Math.random() * LANE_DEPTH * 2 
+                );
+                floatingObj.rotation.set(Math.random() * Math.PI, Math.random() * Math.PI, Math.random() * Math.PI);
+                floatingObj.userData.rotationSpeed = new THREE.Vector3(
+                    (Math.random() - 0.5) * 0.01, (Math.random() - 0.5) * 0.01, (Math.random() - 0.5) * 0.01
+                );
+                scene.add(floatingObj);
+                floatingElements.push(floatingObj);
+            }
+
+            const starGeo = new THREE.BufferGeometry(); 
+            const starVerts = []; 
+            const starMat = new THREE.PointsMaterial({ color: 0xffffff, size: 0.1, transparent: true, opacity: 0.7 }); 
+            for (let i = 0; i < STAR_COUNT; i++) { starVerts.push( (Math.random() - 0.5) * 50, Math.random() * 20 + 1, (Math.random() - 0.5) * (LANE_DEPTH * LANE_SEGMENTS * 1.5));}
+            starGeo.setAttribute('position', new THREE.Float32BufferAttribute(starVerts, 3));
+            starParticles = new THREE.Points(starGeo, starMat);
+            scene.add(starParticles);
+
+            // Criar elementos matemáticos pixelados flutuantes
+            const mathTexts = [
+                // Números simples
+                '0', '1', '2', '3', '4', '5', '6', '7', '8', '9',
+                '10', '15', '20', '25', '50', '100',
+                // Operações básicas
+                '2+3=5', '4+6=10', '7+8=15', '9+1=10',
+                '10-3=7', '15-5=10', '20-8=12', '25-9=16',
+                '2×3=6', '4×5=20', '3×7=21', '6×8=48',
+                '12÷3=4', '20÷4=5', '15÷5=3', '24÷6=4',
+                // Símbolos
+                '+', '-', '×', '÷', '=', '%'
+            ];
+
+            for (let i = 0; i < PIXEL_MATH_COUNT; i++) {
+                const mathText = mathTexts[Math.floor(Math.random() * mathTexts.length)];
+                const texture = createPixelTextTexture(mathText, 200, 50, 16);
+                
+                const material = new THREE.MeshBasicMaterial({
+                    map: texture,
+                    transparent: true,
+                    alphaTest: 0.1,
+                    side: THREE.DoubleSide
+                });
+                
+                const geometry = new THREE.PlaneGeometry(2.5, 0.8);
+                const mathElement = new THREE.Mesh(geometry, material);
+                
+                // Posição inicial aleatória
+                mathElement.position.set(
+                    (Math.random() - 0.5) * 40, // X entre -20 e 20
+                    Math.random() * 8 + 2,      // Y entre 2 e 10
+                    Math.random() * -100 - 10   // Z entre -10 e -110
+                );
+                
+                // Dados de animação
+                mathElement.userData = {
+                    initialY: mathElement.position.y,
+                    floatSpeed: Math.random() * 0.5 + 0.3,
+                    horizontalSpeed: (Math.random() - 0.5) * 0.5,
+                    rotationSpeed: (Math.random() - 0.5) * 0.5,
+                    blinkTimer: Math.random() * 10,
+                    blinkDuration: Math.random() * 2 + 1,
+                    originalOpacity: 1.0
+                };
+                
+                scene.add(mathElement);
+                pixelMathElements.push(mathElement);
+            }
+
+            // FUNDO MELHORADO COM MONTANHAS E NUVENS
+            // Montanhas distantes
+            for (let i = 0; i < 6; i++) {
+                const mountainGeometry = new THREE.ConeGeometry(8 + Math.random() * 10, 15 + Math.random() * 15, 8);
+                const mountainMaterial = new THREE.MeshStandardMaterial({ 
+                    color: new THREE.Color().setHSL(0.6, 0.3, 0.4 + Math.random() * 0.2),
+                    roughness: 0.9,
+                    metalness: 0.0
+                });
+                
+                const mountain = new THREE.Mesh(mountainGeometry, mountainMaterial);
+                mountain.position.set(
+                    (Math.random() - 0.5) * 120,
+                    7.5,
+                    -80 - Math.random() * 80
+                );
+                mountain.receiveShadow = true;
+                scene.add(mountain);
+            }
+            
+            // Nuvens flutuantes
+            for (let i = 0; i < 12; i++) {
+                const cloudGroup = new THREE.Group();
+                
+                // Criar nuvem com múltiplas esferas
+                for (let j = 0; j < 4; j++) {
+                    const cloudPart = new THREE.Mesh(
+                        new THREE.SphereGeometry(1.5 + Math.random() * 1.5, 8, 6),
+                        new THREE.MeshStandardMaterial({ 
+                            color: 0xffffff,
+                            transparent: true,
+                            opacity: 0.7 + Math.random() * 0.2,
+                            roughness: 0.1
+                        })
+                    );
+                    cloudPart.position.set(
+                        (Math.random() - 0.5) * 8,
+                        Math.random() * 1.5,
+                        (Math.random() - 0.5) * 4
+                    );
+                    cloudGroup.add(cloudPart);
+                }
+                
+                cloudGroup.position.set(
+                    (Math.random() - 0.5) * 150,
+                    12 + Math.random() * 8,
+                    -60 - Math.random() * 100
+                );
+                
+                // Movimento lento das nuvens
+                cloudGroup.userData = {
+                    driftSpeed: (Math.random() - 0.5) * 0.02
+                };
+                
+                scene.add(cloudGroup);
+            }
+            
+            // Solo ao redor da pista
+            const groundGeometry = new THREE.PlaneGeometry(200, 400);
+            const groundMaterial = new THREE.MeshStandardMaterial({
+                color: 0x7cb342,
+                roughness: 0.8,
+                metalness: 0.0
+            });
+            const ground = new THREE.Mesh(groundGeometry, groundMaterial);
+            ground.rotation.x = -Math.PI / 2;
+            ground.position.set(0, -0.5, -100);
+            ground.receiveShadow = true;
+            scene.add(ground);
+
+            // PARTÍCULAS AMBIENTAIS FLUTUANTES
+            const particleCount = 40;
+            const particleGeometry = new THREE.BufferGeometry();
+            const positions = [];
+            const colors = [];
+            
+            for (let i = 0; i < particleCount; i++) {
+                positions.push(
+                    (Math.random() - 0.5) * 60,
+                    Math.random() * 20 + 2,
+                    (Math.random() - 0.5) * 200
+                );
+                
+                // Cores variadas para papéis/folhas
+                const color = new THREE.Color();
+                const hue = Math.random() * 0.3 + 0.1; // Tons amarelados/esverdeados
+                color.setHSL(hue, 0.7, 0.7);
+                colors.push(color.r, color.g, color.b);
+            }
+            
+            particleGeometry.setAttribute('position', new THREE.Float32BufferAttribute(positions, 3));
+            particleGeometry.setAttribute('color', new THREE.Float32BufferAttribute(colors, 3));
+            
+            const particleMaterial = new THREE.PointsMaterial({
+                size: 0.3,
+                vertexColors: true,
+                transparent: true,
+                opacity: 0.7
+            });
+            
+            const ambientParticles = new THREE.Points(particleGeometry, particleMaterial);
+            scene.add(ambientParticles);
+
+            console.log("DEBUG: initThreeJS finished");
+        }
+        
+        function createTextTexture(text, width = 128, height = 64, fontSize = 40, bgColor = 'rgba(55, 65, 81, 0.85)', textColor = 'white') { 
+            const c = document.createElement('canvas');
+            c.width = width;
+            c.height = height;
+            const ctx = c.getContext('2d');
+            const cornerRadius = 8;
+            ctx.fillStyle = bgColor;
+            ctx.beginPath();
+            ctx.moveTo(cornerRadius, 0);
+            ctx.lineTo(width - cornerRadius, 0);
+            ctx.quadraticCurveTo(width, 0, width, cornerRadius);
+            ctx.lineTo(width, height - cornerRadius);
+            ctx.quadraticCurveTo(width, height, width - cornerRadius, height);
+            ctx.lineTo(cornerRadius, height);
+            ctx.quadraticCurveTo(0, height, 0, height - cornerRadius);
+            ctx.lineTo(0, cornerRadius);
+            ctx.quadraticCurveTo(0, 0, cornerRadius, 0);
+            ctx.closePath();
+            ctx.fill();
+            ctx.font = `bold ${fontSize}px 'Press Start 2P'`;
+            ctx.fillStyle = textColor;
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText(text, width / 2, height / 2 + 2); 
+            const texture = new THREE.CanvasTexture(c);
+            texture.needsUpdate = true;
+            return texture;
+        }
+
+        function createPixelTextTexture(text, width = 256, height = 64, fontSize = 20) {
+            const canvas = document.createElement('canvas');
+            canvas.width = width;
+            canvas.height = height;
+            const ctx = canvas.getContext('2d');
+            
+            // Desabilitar anti-aliasing para efeito pixelado
+            ctx.imageSmoothingEnabled = false;
+            
+            // Fundo transparente
+            ctx.clearRect(0, 0, width, height);
+            
+            // Configurar fonte pixelada
+            ctx.font = `${fontSize}px 'Press Start 2P'`;
+            ctx.fillStyle = '#00ff00'; // Verde neon
+            ctx.strokeStyle = '#004400'; // Verde escuro para contorno
+            ctx.lineWidth = 2;
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            
+            // Adicionar efeito de brilho pixelado
+            ctx.shadowColor = '#00ff00';
+            ctx.shadowBlur = 4;
+            
+            // Desenhar texto com contorno
+            ctx.strokeText(text, width / 2, height / 2);
+            ctx.fillText(text, width / 2, height / 2);
+            
+            // Criar textura
+            const texture = new THREE.CanvasTexture(canvas);
+            texture.needsUpdate = true;
+            texture.minFilter = THREE.NearestFilter;
+            texture.magFilter = THREE.NearestFilter;
+            
+            return texture;
+        }
+
+        function updateAnswerBoxesVisibilityAndText() {
+            answerBoxes.forEach((box, index) => {
+                if (laneAnswers[index] !== undefined) {
+                    const text = laneAnswers[index].toString();
+                    const newTexture = createTextTexture(text);
+                    if (box.material.map) box.material.map.dispose();
+                    box.material.map = newTexture;
+                    box.material.needsUpdate = true;
+                    box.visible = true;
+                } else {
+                    box.visible = false;
+                }
+            });
+        }
+        
+        function createExplosion(position, color) {
+            const explosion = new THREE.Group();
+            const particleCount = 20;
+            const particleSize = 0.1;
+            const particleMaterial = new THREE.MeshBasicMaterial({ color: color || 0xffaa33, transparent: true }); 
+            const particleGeometry = new THREE.SphereGeometry(particleSize, 4, 4); 
+
+            for (let i = 0; i < particleCount; i++) {
+                const particle = new THREE.Mesh(particleGeometry, particleMaterial.clone());
+                particle.position.copy(position);
+                particle.userData.velocity = new THREE.Vector3(
+                    (Math.random() - 0.5) * 5,
+                    (Math.random() - 0.5) * 5,
+                    (Math.random() - 0.5) * 5
+                );
+                particle.userData.life = 0.6; 
+                explosion.add(particle);
+            }
+            scene.add(explosion);
+            activeExplosions.push(explosion);
+        }
+
+        function updateExplosions(deltaTime) {
+            for (let i = activeExplosions.length - 1; i >= 0; i--) {
+                const explosion = activeExplosions[i];
+                let allParticlesDead = true;
+                explosion.children.forEach(particle => {
+                    if (particle.userData.life > 0) {
+                        allParticlesDead = false;
+                        particle.position.addScaledVector(particle.userData.velocity, deltaTime);
+                        particle.userData.life -= deltaTime;
+                        particle.material.opacity = Math.max(0, particle.userData.life / 0.6); 
+                    } else {
+                        particle.visible = false; 
+                    }
+                });
+
+                if (allParticlesDead) {
+                    scene.remove(explosion);
+                    explosion.children.forEach(p => { 
+                        p.geometry.dispose();
+                        p.material.dispose();
+                    });
+                    activeExplosions.splice(i, 1);
+                }
+            }
+        }
+
+        function resizeGame() { 
+            const container = document.querySelector('.game-container');
+            if (!container) {
+                console.error("DEBUG: Game container not found for resizeGame");
+                return;
+            }
+            const newWidth = container.clientWidth;
+            const newHeight = container.clientHeight;
+
+            if (newWidth === 0 || newHeight === 0) {
+                console.warn("DEBUG: Game container dimensions are zero during resizeGame.");
+            }
+
+            if (renderer && camera) {
+                renderer.setSize(newWidth || 300, newHeight || 150); 
+                camera.aspect = (newWidth || 1) / (newHeight || 1); 
+                camera.updateProjectionMatrix();
+            }
+         }
+        
+        let lastFrameTime = 0;
+        function animate(timestamp) {
+            if (gameState !== 'playing') {
+                return;
+            }
+            requestAnimationFrame(animate);
+
+            const deltaTime = (timestamp - lastFrameTime) / 1000 || 0;
+            lastFrameTime = timestamp;
+
+            // Céu com cores fixas mais realistas (removida animação desnecessária)
+
+            const targetX = (characterLane - (LANE_COUNT - 1) / 2) * ANSWER_BOX_SPACING;
+            if(characterGroup) {
+                characterGroup.position.x = THREE.MathUtils.lerp(characterGroup.position.x, targetX, 0.22);
+                
+                // Animação de corrida
+                if (!isJumping) {
+                    const runCycle = timestamp * 0.01;
+                    const bobAmount = Math.sin(runCycle) * 0.02;
+                    characterGroup.position.y = bobAmount;
+                    
+                    // Rotação sutil do corpo
+                    characterGroup.rotation.z = Math.sin(runCycle * 0.5) * 0.05;
+                    
+                    // Movimento dos braços
+                    const leftArm = characterGroup.children.find(child => child.position.x < 0 && child.geometry?.type === 'CylinderGeometry');
+                    const rightArm = characterGroup.children.find(child => child.position.x > 0 && child.geometry?.type === 'CylinderGeometry');
+                    if (leftArm && rightArm) {
+                        leftArm.rotation.x = Math.sin(runCycle) * 0.3;
+                        rightArm.rotation.x = -Math.sin(runCycle) * 0.3;
+                    }
+                    
+                    // Criar partículas de poeira ocasionalmente
+                    if (Math.random() < 0.1) {
+                        const dustGeometry = new THREE.SphereGeometry(0.05, 4, 4);
+                        const dustMaterial = new THREE.MeshBasicMaterial({ 
+                            color: 0x8b7355, 
+                            transparent: true, 
+                            opacity: 0.6 
+                        });
+                        const dust = new THREE.Mesh(dustGeometry, dustMaterial);
+                        dust.position.copy(characterGroup.position);
+                        dust.position.y = 0.1;
+                        dust.position.z -= 0.5;
+                        dust.userData.life = 1.0;
+                        dust.userData.velocity = new THREE.Vector3(
+                            (Math.random() - 0.5) * 0.5,
+                            Math.random() * 0.5,
+                            -1
+                        );
+                        scene.add(dust);
+                        dustParticles.push(dust);
+                    }
+                }
+            }
+
+            if (isJumping && characterGroup) {
+                characterGroup.position.y += jumpVelocityY * deltaTime;
+                jumpVelocityY -= GRAVITY * deltaTime;
+                if (characterGroup.position.y <= 0) { 
+                    characterGroup.position.y = 0; 
+                    isJumping = false;
+                    jumpVelocityY = 0;
+                }
+            }
+
+            const movement = GAME_SPEED * deltaTime;
+            const totalLaneDepth = LANE_DEPTH * LANE_SEGMENTS;
+            const charZPos = characterGroup ? characterGroup.position.z : 1.5;
+
+            laneMeshes.forEach(lane => { 
+                lane.position.z += movement;
+                if (lane.position.z > charZPos + LANE_DEPTH / 2 + 10) { 
+                    lane.position.z -= totalLaneDepth; 
+                }
+            });
+
+            answerBoxes.forEach(box => { 
+                box.position.z += movement;
+                // Só esconde as caixas se elas passaram muito longe da câmera
+                // E se não estamos esperando que fiquem visíveis
+                if (box.position.z > camera.position.z + 15 && !answersVisible) { 
+                     box.visible = false; 
+                 }
+            });
+
+            if (characterGroup && isJumping) { 
+                const characterBoundingBox = new THREE.Box3().setFromObject(characterGroup);
+                answerBoxes.forEach((box) => { 
+                    if (box.visible) {
+                        const boxBoundingBox = new THREE.Box3().setFromObject(box);
+                        if (characterBoundingBox.intersectsBox(boxBoundingBox)) {
+                            if (box.userData.answerIndex === characterLane) {
+                                handleAnswerSelection(box.userData.answerIndex, box); 
+                            }
+                        }
+                    }
+                });
+            }
+            
+            updateExplosions(deltaTime);
+            
+            // Atualizar partículas de poeira
+            for (let i = dustParticles.length - 1; i >= 0; i--) {
+                const dust = dustParticles[i];
+                dust.userData.life -= deltaTime;
+                
+                if (dust.userData.life <= 0) {
+                    scene.remove(dust);
+                    dust.geometry.dispose();
+                    dust.material.dispose();
+                    dustParticles.splice(i, 1);
+                } else {
+                    dust.position.add(dust.userData.velocity.clone().multiplyScalar(deltaTime));
+                    dust.material.opacity = dust.userData.life * 0.6;
+                    dust.scale.setScalar(1 + (1 - dust.userData.life) * 0.5);
+                }
+            } 
+            
+            const groundLaneWidth = LANE_WIDTH_VISUAL * LANE_COUNT + ANSWER_BOX_SPACING * (LANE_COUNT -1) + LANE_WIDTH_VISUAL;
+            // sideElements removidos
+
+            floatingElements.forEach(element => {
+                element.position.z += movement * 0.5; 
+                element.rotation.x += element.userData.rotationSpeed.x;
+                element.rotation.y += element.userData.rotationSpeed.y;
+                element.rotation.z += element.userData.rotationSpeed.z;
+                if (element.position.z > camera.position.z + 30) {
+                    element.position.z = -LANE_DEPTH * LANE_SEGMENTS * 1.5 - Math.random() * 50;
+                    element.position.x = (Math.random() - 0.5) * 50;
+                    element.position.y = 5 + Math.random() * 15;
+                }
+            });
+
+            if (starParticles && starParticles.geometry && starParticles.geometry.attributes.position) {
+                const positions = starParticles.geometry.attributes.position.array;
+                for (let i = 0; i < STAR_COUNT; i++) {
+                    positions[i * 3 + 2] += movement * 1.2; 
+                    if (positions[i * 3 + 2] > camera.position.z + 10) {
+                        positions[i * 3 + 2] = -LANE_DEPTH * LANE_SEGMENTS * 0.75 - Math.random() * 50; 
+                        positions[i * 3] = (Math.random() - 0.5) * 60; 
+                        positions[i * 3 + 1] = Math.random() * 25 + 2;   
+                    }
+                }
+                starParticles.geometry.attributes.position.needsUpdate = true;
+            }
+
+            // Animar nuvens flutuantes
+            scene.traverse((child) => {
+                if (child.isGroup && child.userData.driftSpeed !== undefined) {
+                    child.position.x += child.userData.driftSpeed;
+                    child.position.y += Math.sin(Date.now() * 0.0005) * 0.01;
+                    
+                    // Reposicionar nuvem quando sai de vista
+                    if (Math.abs(child.position.x) > 80) {
+                        child.position.x = -Math.sign(child.position.x) * 80;
+                        child.position.z = -60 - Math.random() * 100;
+                    }
+                }
+            });
+
+            // Atualizar elementos matemáticos pixelados
+            pixelMathElements.forEach(mathElement => {
+                const userData = mathElement.userData;
+                
+                // Movimento flutuante vertical
+                mathElement.position.y = userData.initialY + Math.sin(Date.now() * 0.001 * userData.floatSpeed) * 0.5;
+                
+                // Movimento horizontal lento
+                mathElement.position.x += userData.horizontalSpeed * deltaTime;
+                
+                // Rotação suave
+                mathElement.rotation.z += userData.rotationSpeed * deltaTime;
+                
+                // Sistema de piscada
+                userData.blinkTimer += deltaTime;
+                if (userData.blinkTimer > userData.blinkDuration) {
+                    const blinkPhase = (userData.blinkTimer - userData.blinkDuration) % 1;
+                    if (blinkPhase < 0.1) {
+                        mathElement.material.opacity = 0.3;
+                    } else if (blinkPhase < 0.2) {
+                        mathElement.material.opacity = userData.originalOpacity;
+                    } else if (blinkPhase > 0.8) {
+                        userData.blinkTimer = 0;
+                        userData.blinkDuration = Math.random() * 8 + 2;
+                    }
+                }
+                
+                // Mover para frente com a cena
+                mathElement.position.z += movement * 0.8;
+                
+                // Regenerar elemento quando sai de vista
+                if (mathElement.position.z > camera.position.z + 20) {
+                    mathElement.position.z = Math.random() * -200 - 50;
+                    mathElement.position.x = (Math.random() - 0.5) * 40;
+                    mathElement.position.y = Math.random() * 8 + 2;
+                    userData.initialY = mathElement.position.y;
+                    userData.blinkTimer = Math.random() * 10;
+                    
+                    // Atualizar texto ocasionalmente
+                    if (Math.random() < 0.3) {
+                        const mathTexts = [
+                            '0', '1', '2', '3', '4', '5', '6', '7', '8', '9',
+                            '10', '15', '20', '25', '50', '100',
+                            '2+3=5', '4+6=10', '7+8=15', '9+1=10',
+                            '10-3=7', '15-5=10', '20-8=12', '25-9=16',
+                            '2×3=6', '4×5=20', '3×7=21', '6×8=48',
+                            '12÷3=4', '20÷4=5', '15÷5=3', '24÷6=4',
+                            '+', '-', '×', '÷', '=', '%'
+                        ];
+                        const newText = mathTexts[Math.floor(Math.random() * mathTexts.length)];
+                        const newTexture = createPixelTextTexture(newText, 200, 50, 16);
+                        if (mathElement.material.map) mathElement.material.map.dispose();
+                        mathElement.material.map = newTexture;
+                        mathElement.material.needsUpdate = true;
+                    }
+                }
+            });
+
+            updateGameLogic(deltaTime * 1000);
+            if(scene && camera && renderer) renderer.render(scene, camera);
+        }
+
+        function updateGameLogic(deltaTimeMs) {
+            if (gameState !== 'playing') return;
+            
+            // Só conta o tempo quando as respostas estão visíveis
+            if (answersVisible) {
+                questionTimer += deltaTimeMs;
+            }
+
+            if (answersVisible && questionTimer >= currentQuestionDuration) { 
+                console.log("DEBUG: Tempo esgotado!");
+                lives--; 
+                showFeedback(false, "Tempo Esgotado!"); 
+                updateScoreDisplay();
+                updateLivesDisplay();
+
+                if (lives <= 0) {
+                    gameOver();
+                    return;
+                }
+                questionTimer = 0; 
+                // Adiciona delay antes da próxima questão após timeout
+                setTimeout(() => {
+                    if(gameState === 'playing') {
+                        resetAndGenerateNewQuestion();
+                    }
+                }, NEXT_QUESTION_DELAY);
+            }
+        }
+        
+        function resetAndGenerateNewQuestion() {
+            console.log("DEBUG: resetAndGenerateNewQuestion called");
+            questionTimer = 0; // Garante que o timer seja resetado
+            answersVisible = false; // Reset da flag
+            const charZ = characterGroup ? characterGroup.position.z : 1.5;
+            answerBoxes.forEach((box, index) => {
+                const xPosition = (index - (LANE_COUNT - 1) / 2) * ANSWER_BOX_SPACING;
+                box.position.set(xPosition, ANSWER_BOX_Y_CENTER, charZ - 20 - Math.random() * 5);
+                if (box.material.map) box.material.map.dispose(); 
+                box.material.map = createTextTexture("?"); 
+                box.material.color.setHex(0xffffff); 
+                box.visible = false; 
+            });
+            floatingElements.forEach(element => {
+                 element.position.z = -LANE_DEPTH - Math.random() * LANE_DEPTH * 2;
+                 element.position.x = (Math.random() - 0.5) * 50;
+                 element.position.y = 5 + Math.random() * 15;
+            });
+            generateQuestion();
+        }
+
+        function initGame() { 
+            console.log("DEBUG: initGame called");
+            score = 0;
+            lives = INITIAL_LIVES;
+            characterLane = 1;
+            isJumping = false; 
+            jumpVelocityY = 0;
+            if (characterGroup) {
+                 characterGroup.position.y = 0; 
+                 characterGroup.position.x = (characterLane - (LANE_COUNT - 1) / 2) * ANSWER_BOX_SPACING; 
+            }
+            currentQuestionDuration = QUESTION_DURATION_INITIAL;
+            updateScoreDisplay();
+            updateLivesDisplay();
+            
+            gameState = 'playing';
+            startScreen.classList.add('hidden');
+            gameOverScreen.classList.add('hidden');
+            gameScreenContainer.classList.remove('hidden');
+            gameUI.classList.remove('hidden');
+            
+            // Mostrar controles touch em mobile
+            showTouchControls();
+
+            if (!renderer) { 
+                try {
+                    console.log("DEBUG: Iniciando initThreeJS...");
+                    initThreeJS();
+                    console.log("DEBUG: initThreeJS concluído com sucesso");
+                } catch (e) {
+                    console.error("DEBUG: Error during initThreeJS:", e);
+                    console.error("DEBUG: Stack trace:", e.stack);
+                    gameState = 'gameOver'; 
+                    gameOverScreen.classList.remove('hidden');
+                    finalScoreDisplay.textContent = "Erro ao iniciar o jogo: " + e.message;
+                    return;
+                }
+            
+                if(characterGroup) {
+                    characterGroup.position.x = (characterLane - (LANE_COUNT - 1) / 2) * ANSWER_BOX_SPACING; 
+                    characterGroup.position.y = 0; 
+                }
+                const charZ = characterGroup ? characterGroup.position.z : 1.5;
+                laneMeshes.forEach((lane, index) => {
+                    const segmentIndex = index % LANE_SEGMENTS; 
+                    lane.position.z = -LANE_DEPTH / 2 + charZ + 10 - (segmentIndex * LANE_DEPTH);
+                });
+                if (starParticles && starParticles.geometry && starParticles.geometry.attributes.position) {
+                    const starPositions = starParticles.geometry.attributes.position.array;
+                    for (let i = 0; i < STAR_COUNT; i++) {
+                        starPositions[i * 3 + 2] = (Math.random() - 0.5) * (LANE_DEPTH * LANE_SEGMENTS * 1.5);
+                    }
+                    starParticles.geometry.attributes.position.needsUpdate = true;
+                }
+
+            }
+            
+            resizeGame(); 
+            
+            if (!renderer || !camera || gameState === 'gameOver') { 
+                console.error("DEBUG: Renderer or camera not ready after init/reset. Aborting game start.");
+                if(gameState !== 'gameOver') gameOver(); 
+                return;
+            }
+            resetAndGenerateNewQuestion(); 
+            lastFrameTime = performance.now();
+            requestAnimationFrame(animate); 
+            console.log("DEBUG: initGame finished successfully, animation loop started.");
+        }
+
+        function generateQuestion() { 
+            console.log("DEBUG: generateQuestion called, score:", score);
+            
+            let correctAnswer, questionText;
+            
+            // Sistema de níveis baseado na pontuação
+            if (score < 30) {
+                // NÍVEL 1: Operações básicas com números pequenos (1-10)
+                const num1 = Math.floor(Math.random() * 10) + 1;
+                const num2 = Math.floor(Math.random() * 10) + 1;
+                const operation = Math.random() < 0.7 ? '+' : '-';
+                
+                if (operation === '+') {
+                    correctAnswer = num1 + num2;
+                    questionText = `${num1} + ${num2} = ?`;
+                } else {
+                    // Garantir que não temos resultados negativos
+                    if (num1 < num2) {
+                        correctAnswer = num2 - num1;
+                        questionText = `${num2} - ${num1} = ?`;
+                    } else {
+                        correctAnswer = num1 - num2;
+                        questionText = `${num1} - ${num2} = ?`;
+                    }
+                }
+                
+            } else if (score < 60) {
+                // NÍVEL 2: Adiciona multiplicação e números maiores (1-15)
+                const num1 = Math.floor(Math.random() * 15) + 1;
+                const num2 = Math.floor(Math.random() * 15) + 1;
+                const operation = Math.random();
+                
+                if (operation < 0.4) {
+                    correctAnswer = num1 + num2;
+                    questionText = `${num1} + ${num2} = ?`;
+                } else if (operation < 0.7) {
+                    if (num1 < num2) {
+                        correctAnswer = num2 - num1;
+                        questionText = `${num2} - ${num1} = ?`;
+                    } else {
+                        correctAnswer = num1 - num2;
+                        questionText = `${num1} - ${num2} = ?`;
+                    }
+                } else {
+                    // Multiplicação com números menores
+                    const mNum1 = Math.floor(Math.random() * 8) + 1;
+                    const mNum2 = Math.floor(Math.random() * 8) + 1;
+                    correctAnswer = mNum1 * mNum2;
+                    questionText = `${mNum1} × ${mNum2} = ?`;
+                }
+                
+            } else if (score < 100) {
+                // NÍVEL 3: Adiciona divisão e números até 20
+                const operation = Math.random();
+                
+                if (operation < 0.25) {
+                    // Adição com números maiores
+                    const num1 = Math.floor(Math.random() * 20) + 5;
+                    const num2 = Math.floor(Math.random() * 20) + 5;
+                    correctAnswer = num1 + num2;
+                    questionText = `${num1} + ${num2} = ?`;
+                } else if (operation < 0.5) {
+                    // Subtração
+                    const num1 = Math.floor(Math.random() * 30) + 10;
+                    const num2 = Math.floor(Math.random() * 20) + 1;
+                    correctAnswer = num1 - num2;
+                    questionText = `${num1} - ${num2} = ?`;
+                } else if (operation < 0.75) {
+                    // Multiplicação
+                    const mNum1 = Math.floor(Math.random() * 10) + 2;
+                    const mNum2 = Math.floor(Math.random() * 10) + 2;
+                    correctAnswer = mNum1 * mNum2;
+                    questionText = `${mNum1} × ${mNum2} = ?`;
+                } else {
+                    // Divisão (garantir divisão exata)
+                    const divisor = Math.floor(Math.random() * 8) + 2;
+                    const quotient = Math.floor(Math.random() * 10) + 2;
+                    const dividend = divisor * quotient;
+                    correctAnswer = quotient;
+                    questionText = `${dividend} ÷ ${divisor} = ?`;
+                }
+                
+            } else if (score < 150) {
+                // NÍVEL 4: Operações com dois passos e números maiores
+                const operation = Math.random();
+                
+                if (operation < 0.3) {
+                    // Operação de dois passos (adição e subtração)
+                    const num1 = Math.floor(Math.random() * 20) + 5;
+                    const num2 = Math.floor(Math.random() * 15) + 5;
+                    const num3 = Math.floor(Math.random() * 10) + 1;
+                    correctAnswer = num1 + num2 - num3;
+                    questionText = `${num1} + ${num2} - ${num3} = ?`;
+                } else if (operation < 0.6) {
+                    // Multiplicação com números maiores
+                    const mNum1 = Math.floor(Math.random() * 12) + 3;
+                    const mNum2 = Math.floor(Math.random() * 12) + 3;
+                    correctAnswer = mNum1 * mNum2;
+                    questionText = `${mNum1} × ${mNum2} = ?`;
+                } else if (operation < 0.8) {
+                    // Divisão com números maiores
+                    const divisor = Math.floor(Math.random() * 12) + 2;
+                    const quotient = Math.floor(Math.random() * 15) + 2;
+                    const dividend = divisor * quotient;
+                    correctAnswer = quotient;
+                    questionText = `${dividend} ÷ ${divisor} = ?`;
+                } else {
+                    // Operação mista (multiplicação e adição)
+                    const num1 = Math.floor(Math.random() * 8) + 2;
+                    const num2 = Math.floor(Math.random() * 8) + 2;
+                    const num3 = Math.floor(Math.random() * 20) + 5;
+                    correctAnswer = num1 * num2 + num3;
+                    questionText = `${num1} × ${num2} + ${num3} = ?`;
+                }
+                
+            } else {
+                // NÍVEL 5+: Operações complexas, incluindo potências e raízes
+                const operation = Math.random();
+                
+                if (operation < 0.2) {
+                    // Operação de três passos
+                    const num1 = Math.floor(Math.random() * 15) + 5;
+                    const num2 = Math.floor(Math.random() * 10) + 5;
+                    const num3 = Math.floor(Math.random() * 8) + 2;
+                    const num4 = Math.floor(Math.random() * 5) + 1;
+                    correctAnswer = (num1 + num2) * num3 - num4;
+                    questionText = `(${num1} + ${num2}) × ${num3} - ${num4} = ?`;
+                } else if (operation < 0.4) {
+                    // Potências simples
+                    const base = Math.floor(Math.random() * 10) + 2;
+                    const exponent = Math.random() < 0.5 ? 2 : 3;
+                    correctAnswer = Math.pow(base, exponent);
+                    questionText = `${base}${exponent === 2 ? '²' : '³'} = ?`;
+                } else if (operation < 0.6) {
+                    // Raiz quadrada (apenas de quadrados perfeitos)
+                    const perfectSquares = [4, 9, 16, 25, 36, 49, 64, 81, 100, 121, 144];
+                    const square = perfectSquares[Math.floor(Math.random() * perfectSquares.length)];
+                    correctAnswer = Math.sqrt(square);
+                    questionText = `√${square} = ?`;
+                } else if (operation < 0.8) {
+                    // Divisão complexa
+                    const num1 = Math.floor(Math.random() * 50) + 20;
+                    const num2 = Math.floor(Math.random() * 10) + 2;
+                    const num3 = Math.floor(Math.random() * 5) + 2;
+                    correctAnswer = Math.floor(num1 / num2) * num3;
+                    questionText = `(${num1} ÷ ${num2}) × ${num3} = ?`;
+                } else {
+                    // Porcentagem simples
+                    const percentages = [10, 20, 25, 50, 75];
+                    const percentage = percentages[Math.floor(Math.random() * percentages.length)];
+                    const baseNum = Math.floor(Math.random() * 10) * 10 + 20; // 20, 30, 40...
+                    correctAnswer = (percentage / 100) * baseNum;
+                    questionText = `${percentage}% de ${baseNum} = ?`;
+                }
+            }
+            
+            currentQuestion = { text: questionText, answer: correctAnswer };
+            questionDisplay.textContent = currentQuestion.text;
+
+            // Gerar respostas incorretas próximas à correta
+            const answers = [correctAnswer];
+            while (answers.length < LANE_COUNT) { 
+                let offsetRange = correctAnswer > 50 ? 10 : (correctAnswer > 20 ? 6 : 4);
+                let randomAnswer = correctAnswer + (Math.floor(Math.random() * (offsetRange * 2 + 1)) - offsetRange);
+                
+                if (randomAnswer >= 0 && !answers.includes(randomAnswer) && randomAnswer !== correctAnswer) {
+                    answers.push(randomAnswer);
+                } else { 
+                    let attempts = 0;
+                    while((answers.includes(randomAnswer) || randomAnswer < 0 || randomAnswer === correctAnswer) && attempts < 20) {
+                        randomAnswer = correctAnswer + (Math.floor(Math.random() * (offsetRange * 2 + 1)) - offsetRange);
+                        attempts++;
+                    }
+                    if(attempts < 20 && randomAnswer >= 0 && !answers.includes(randomAnswer) && randomAnswer !== correctAnswer) {
+                        answers.push(randomAnswer);
+                    } else if (answers.length < LANE_COUNT) { 
+                        for(let fallback = 1; fallback < 20; fallback++){
+                            if(!answers.includes(correctAnswer + fallback) && (correctAnswer + fallback) >= 0) { 
+                                answers.push(correctAnswer + fallback); 
+                                break;
+                            }
+                            if(!answers.includes(correctAnswer - fallback) && (correctAnswer - fallback) >= 0) { 
+                                answers.push(correctAnswer - fallback); 
+                                break;
+                            }
+                        }
+                    }
+                }
+            }
+            
+            while(answers.length > LANE_COUNT) answers.pop();
+            while(answers.length < LANE_COUNT) answers.push(Math.max(0, correctAnswer + answers.length + 1));
+
+            // Embaralhar as respostas
+            for (let i = answers.length - 1; i > 0; i--) { 
+                const j = Math.floor(Math.random() * (i + 1));
+                [answers[i], answers[j]] = [answers[j], answers[i]];
+            }
+            
+            laneAnswers = answers; 
+            answersVisible = false;
+            
+            // Primeiro esconde todas as caixas de resposta
+            answerBoxes.forEach(box => {
+                box.visible = false;
+            });
+            
+            // Depois de um delay, mostra as respostas
+            setTimeout(() => {
+                if(gameState === 'playing') {
+                    updateAnswerBoxesVisibilityAndText(); 
+                    answersVisible = true;
+                    questionTimer = 0;
+                }
+            }, QUESTION_TO_ANSWERS_DELAY);
+            
+            console.log("DEBUG: Question generated:", questionText, "Answer:", correctAnswer, "Options:", laneAnswers);
+        }
+
+        function handleAnswerSelection(collidedBoxIndex, collidedBoxMesh) {
+            console.log("DEBUG: handleAnswerSelection called for box index:", collidedBoxIndex);
+            if (collidedBoxIndex < 0 || collidedBoxIndex >= laneAnswers.length) {
+                console.warn("DEBUG: Invalid box index in handleAnswerSelection");
+                return;
+            }
+            if (gameState !== 'playing' || !answersVisible || questionTimer >= currentQuestionDuration) {
+                 console.log("DEBUG: Answer selection ignored, game not playing or answers not visible or question timed out.");
+                return;
+            }
+
+            const selectedAnswerValue = laneAnswers[collidedBoxIndex];
+            let isCorrect = false;
+            if (selectedAnswerValue === currentQuestion.answer) {
+                score += 10;
+                isCorrect = true;
+                if (score % POINTS_FOR_DECREMENT === 0 && score > 0) {
+                    currentQuestionDuration = Math.max(QUESTION_DURATION_MIN, currentQuestionDuration - QUESTION_DURATION_DECREMENT);
+                }
+            } else {
+                lives--;
+            }
+            
+            createExplosion(collidedBoxMesh.position.clone(), isCorrect ? 0x4ade80 : 0xf87171);
+            collidedBoxMesh.visible = false; 
+
+            showFeedback(isCorrect); 
+            updateScoreDisplay();
+            updateLivesDisplay();
+
+            if (lives <= 0) {
+                gameOver();
+                return;
+            }
+
+            questionTimer = 0; 
+            answerBoxes.forEach(box => { if (box !== collidedBoxMesh) box.visible = false; });
+            
+            setTimeout(() => {
+                if(gameState === 'playing') { 
+                    resetAndGenerateNewQuestion();
+                }
+            }, NEXT_QUESTION_DELAY); 
+        }
+
+        function showFeedback(isCorrect, customMessage = null) { 
+            feedbackText.textContent = customMessage ? customMessage : (isCorrect ? 'CERTO!' : 'ERRADO!');
+            feedbackText.className = 'feedback-text show ' + (isCorrect ? 'correct' : 'incorrect');
+            setTimeout(() => { feedbackText.className = 'feedback-text'; }, 1000);
+        }
+        function updateScoreDisplay() { scoreDisplay.textContent = `Pontos: ${score}`; }
+        function updateLivesDisplay() { livesDisplay.textContent = `Vidas: ${lives}`; }
+
+        function gameOver() { 
+            console.log("DEBUG: gameOver called");
+            gameState = 'gameOver';
+            finalScoreDisplay.textContent = `Sua pontuação: ${score}`;
+            gameScreenContainer.classList.add('hidden');
+            gameUI.classList.add('hidden');
+            gameOverScreen.classList.remove('hidden');
+            
+            // Esconder controles touch
+            hideTouchControls();
+        }
+        
+        function handleKeyPress(e) { 
+            console.log("DEBUG: Key pressed:", e.key, " gameState:", gameState, "isJumping:", isJumping);
+            if (gameState !== 'playing') return;
+            
+            // Controles originais (setas e espaço)
+            if (e.key === 'ArrowLeft') {
+                characterLane = Math.max(0, characterLane - 1);
+                console.log("DEBUG: characterLane to left:", characterLane);
+            } else if (e.key === 'ArrowRight') {
+                characterLane = Math.min(LANE_COUNT - 1, characterLane + 1);
+                console.log("DEBUG: characterLane to right:", characterLane);
+            } else if ((e.key === ' ' || e.key === 'ArrowUp') && !isJumping) { 
+                isJumping = true;
+                jumpVelocityY = JUMP_VELOCITY_INITIAL;
+                console.log("DEBUG: Jump initiated by key press");
+            }
+            
+            // Novos controles WASD
+            else if (e.key.toLowerCase() === 'a') {
+                characterLane = Math.max(0, characterLane - 1);
+                console.log("DEBUG: characterLane to left (A key):", characterLane);
+            } else if (e.key.toLowerCase() === 'd') {
+                characterLane = Math.min(LANE_COUNT - 1, characterLane + 1);
+                console.log("DEBUG: characterLane to right (D key):", characterLane);
+            } else if (e.key.toLowerCase() === 'w' && !isJumping) {
+                isJumping = true;
+                jumpVelocityY = JUMP_VELOCITY_INITIAL;
+                console.log("DEBUG: Jump initiated by W key");
+            } else if (e.key.toLowerCase() === 's') {
+                isDucking = true;
+                console.log("DEBUG: Ducking initiated by S key");
+                // Efeito visual de agachamento
+                if (characterGroup) {
+                    characterGroup.scale.y = 0.7; // Reduz altura do personagem
+                    characterGroup.position.y = -0.1; // Abaixa um pouco
+                }
+                // Agachamento por tempo limitado
+                setTimeout(() => {
+                    isDucking = false;
+                    if (characterGroup) {
+                        characterGroup.scale.y = 1; // Restaura altura normal
+                        characterGroup.position.y = isJumping ? characterGroup.position.y : 0; // Restaura posição se não estiver pulando
+                    }
+                    console.log("DEBUG: Ducking ended");
+                }, 500); // Agacha por 500ms
+            }
+        }
+
+        let touchStartX = 0;
+        let touchStartY = 0; 
+        function handleTouchStart(e) { 
+            console.log("DEBUG: Touch start, gameState:", gameState);
+            if (gameState !== 'playing') return;
+            if (e.touches.length === 1) { 
+                touchStartX = e.touches[0].screenX;
+                touchStartY = e.touches[0].screenY; 
+            }
+        }
+
+        function handleTouchEnd(e) { 
+            console.log("DEBUG: Touch end, gameState:", gameState);
+            if (gameState !== 'playing') return;
+             if (e.changedTouches.length === 1) {
+                const touchEndX = e.changedTouches[0].screenX;
+                const touchEndY = e.changedTouches[0].screenY;
+                
+                const swipeXThreshold = 40; 
+                const swipeYThreshold = -50; 
+
+                const deltaX = touchEndX - touchStartX;
+                const deltaY = touchEndY - touchStartY;
+
+                if (deltaY < swipeYThreshold && Math.abs(deltaY) > Math.abs(deltaX) * 1.5) { 
+                    if (!isJumping) {
+                        isJumping = true;
+                        jumpVelocityY = JUMP_VELOCITY_INITIAL;
+                        console.log("DEBUG: Jump initiated by touch swipe");
+                    }
+                } else { 
+                    if (deltaX < -swipeXThreshold) {
+                        characterLane = Math.max(0, characterLane - 1);
+                        console.log("DEBUG: characterLane to left by touch:", characterLane);
+                    } else if (deltaX > swipeXThreshold) {
+                        characterLane = Math.min(LANE_COUNT - 1, characterLane + 1);
+                        console.log("DEBUG: characterLane to right by touch:", characterLane);
+                    }
+                }
+            }
+        }
+        
+        // Event Listeners
+        startButton.addEventListener('click', initGame);
+        restartButton.addEventListener('click', initGame);
+        
+        // CONTROLES TOUCH MOBILE
+        const touchControls = document.getElementById('touchControls');
+        const touchLeft = document.getElementById('touchLeft');
+        const touchRight = document.getElementById('touchRight');
+        const touchJump = document.getElementById('touchJump');
+        const touchDuck = document.getElementById('touchDuck');
+        
+        // Detectar se é dispositivo móvel
+        function isMobile() {
+            return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) || 
+                   ('ontouchstart' in window) || 
+                   window.innerWidth <= 768;
+        }
+        
+        // Mostrar controles touch apenas em mobile
+        function showTouchControls() {
+            if (isMobile() && gameState === 'playing') {
+                touchControls.classList.add('show');
+            }
+        }
+        
+        function hideTouchControls() {
+            touchControls.classList.remove('show');
+        }
+        
+        // Event listeners para controles touch
+        touchLeft.addEventListener('touchstart', (e) => {
+            e.preventDefault();
+            handleKeyPress({ code: 'ArrowLeft', key: 'ArrowLeft' });
+        });
+        
+        touchRight.addEventListener('touchstart', (e) => {
+            e.preventDefault();
+            handleKeyPress({ code: 'ArrowRight', key: 'ArrowRight' });
+        });
+        
+        touchJump.addEventListener('touchstart', (e) => {
+            e.preventDefault();
+            handleKeyPress({ code: 'Space', key: ' ' });
+        });
+        
+        touchDuck.addEventListener('touchstart', (e) => {
+            e.preventDefault();
+            handleKeyPress({ code: 'KeyS', key: 's' });
+        });
+        
+        // Evitar scroll em mobile
+        document.addEventListener('touchmove', (e) => {
+            e.preventDefault();
+        }, { passive: false });
+        
+        // Detectar orientação mobile
+        function handleOrientationChange() {
+            if (isMobile()) {
+                setTimeout(() => {
+                    if (renderer && canvas) {
+                        const container = canvas.parentElement;
+                        renderer.setSize(container.clientWidth, container.clientHeight);
+                        camera.aspect = container.clientWidth / container.clientHeight;
+                        camera.updateProjectionMatrix();
+                    }
+                }, 100);
+            }
+        }
+        
+        window.addEventListener('orientationchange', handleOrientationChange);
+        window.addEventListener('resize', handleOrientationChange);
+        
+        window.addEventListener('keydown', handleKeyPress);
+        
+        const gameAreaForTouch = document.querySelector('.game-container');
+        if (gameAreaForTouch) { 
+            gameAreaForTouch.addEventListener('touchstart', handleTouchStart, { passive: false }); 
+            gameAreaForTouch.addEventListener('touchend', handleTouchEnd, { passive: false });
+        } else {
+            console.error("DEBUG: Element .game-container not found for touch events.");
+        }
+
+        window.addEventListener('resize', resizeGame);
+
+        // Inicialização
+        resizeGame(); 
+        startScreen.classList.remove('hidden'); 
+        console.log("DEBUG: Game setup finished. Waiting for start button.");
+
+    </script>
+</body>
+</html>
