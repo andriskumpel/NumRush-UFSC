@@ -41,6 +41,10 @@ Corra pela pista 3D e resolva equações matemáticas escolhendo a resposta corr
 2. Abra o arquivo index.html no navegador
 3. Divirta-se aprendendo matemática!
 
+## 📦 Atualizando dependências
+
+O arquivo `js/three.min.js` guarda a biblioteca Three.js minificada. Para usar outra versão, baixe o script em https://cdnjs.com/libraries/three.js e substitua esse arquivo.
+
 ## 👨‍💻 Autor
 
 **Andris Kumpel** - [GitHub](https://github.com/andriskumpel)
