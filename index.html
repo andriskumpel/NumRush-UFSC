@@ -15,6 +15,11 @@
             box-sizing: border-box;
             -webkit-tap-highlight-color: transparent;
         }
+
+        html {
+            width: 100%;
+            height: calc(var(--vh, 1vh) * 100);
+        }
         
         body {
             font-family: 'Press Start 2P', cursive;
@@ -23,8 +28,8 @@
             overflow: hidden;
             background-color: #1a202c;
             color: #f7fafc;
-            width: 100vw;
-            height: 100vh;
+            width: 100%;
+            height: calc(var(--vh, 1vh) * 100);
             position: fixed;
             top: 0;
             left: 0;
@@ -32,8 +37,8 @@
         }
         
         .game-container {
-            width: 100vw;
-            height: 100vh;
+            width: 100%;
+            height: calc(var(--vh, 1vh) * 100);
             background-color: #2d3748;
             position: relative;
             overflow: hidden;
@@ -826,6 +831,13 @@
     </div>
 
     <script>
+        function updateViewportHeight() {
+            document.documentElement.style.setProperty('--vh', `${window.innerHeight * 0.01}px`);
+        }
+        window.addEventListener('resize', updateViewportHeight);
+        window.addEventListener('orientationchange', updateViewportHeight);
+        updateViewportHeight();
+
         // Elementos da UI
         const startScreen = document.getElementById('startScreen');
         const gameScreenContainer = document.getElementById('gameScreenContainer');
@@ -2367,6 +2379,7 @@
                     }
                 }, 100);
             }
+            updateViewportHeight();
         }
         
         window.addEventListener('orientationchange', handleOrientationChange);
