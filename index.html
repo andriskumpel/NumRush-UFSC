@@ -806,7 +806,6 @@
              <canvas id="gameCanvas"></canvas> 
         </div>
         
-        <!-- CONTROLES TOUCH ON-SCREEN -->
         <div id="touchControls" class="touch-controls">
             <button class="touch-btn touch-btn-left" id="touchLeft">←</button>
             <button class="touch-btn touch-btn-right" id="touchRight">→</button>
@@ -831,7 +830,12 @@
     </div>
 
     <script>
+        // CÓDIGO CORRIGIDO ABAIXO
         function updateViewportHeight() {
+            // Calcula 1% da altura da janela interna (viewport)
+            let vh = window.innerHeight * 0.01;
+            // Define o valor da variável '--vh' no elemento raiz (<html>)
+            document.documentElement.style.setProperty('--vh', `${vh}px`);
         }
         window.addEventListener('resize', updateViewportHeight);
         window.addEventListener('orientationchange', updateViewportHeight);
