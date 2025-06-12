@@ -922,29 +922,20 @@
 
 
         function initThreeJS() {
-            console.log("DEBUG: initThreeJS called");
-            console.log("DEBUG: Creating scene...");
             scene = new THREE.Scene();
-            console.log("DEBUG: Scene created successfully");
 
-            console.log("DEBUG: Creating camera...");
             camera = new THREE.PerspectiveCamera(75, (canvas.clientWidth || 1) / (canvas.clientHeight || 1), 0.1, 2000); 
             camera.position.set(0, 2.5, 5); 
             camera.lookAt(0, 1.0, 0); 
-            console.log("DEBUG: Camera created successfully");
 
-            console.log("DEBUG: Creating renderer...");
             renderer = new THREE.WebGLRenderer({ canvas: canvas, antialias: true });
             renderer.setSize(canvas.clientWidth || 300, canvas.clientHeight || 150); 
             if (canvas.clientWidth === 0 || canvas.clientHeight === 0) {
-                console.warn("DEBUG: Canvas dimensions are zero during initThreeJS. Using fallback dimensions.");
             }
             renderer.shadowMap.enabled = true;
             renderer.shadowMap.type = THREE.PCFSoftShadowMap;
-            console.log("DEBUG: Renderer configured successfully"); 
 
             // ILUMINAÇÃO CINEMATOGRÁFICA AVANÇADA
-            console.log("DEBUG: Setting up lighting...");
             // Luz ambiente suave
             const ambientLight = new THREE.AmbientLight(0xfff8e1, 0.6);
             scene.add(ambientLight);
@@ -985,9 +976,7 @@
             trackSpotlight.castShadow = true;
             scene.add(trackSpotlight);
             scene.add(trackSpotlight.target);
-            console.log("DEBUG: Lighting setup complete");
             
-            console.log("DEBUG: Creating sky...");
             const skyGeometry = new THREE.SphereGeometry(1000, 32, 15); 
             const skyShaderMaterial = new THREE.ShaderMaterial({
                 uniforms: {
@@ -1019,9 +1008,7 @@
             });
             skydome = new THREE.Mesh(skyGeometry, skyShaderMaterial);
             scene.add(skydome);
-            console.log("DEBUG: Sky created successfully");
 
-            console.log("DEBUG: Creating character...");
             characterGroup = new THREE.Group();
             const skinMaterial = new THREE.MeshStandardMaterial({ color: 0xffdba1, roughness: 0.8, metalness: 0.1 });
             shirtMaterial = new THREE.MeshStandardMaterial({ color: 0x3b82f6, roughness: 0.7, metalness: 0.1 }); 
@@ -1063,19 +1050,15 @@
             characterGroup.position.z = 1.5; 
             characterGroup.position.y = 0; 
             scene.add(characterGroup);
-            console.log("DEBUG: Character created successfully");
 
             // PISTA PRINCIPAL APRIMORADA
-            console.log("DEBUG: Creating track...");
             const groundLaneWidth = LANE_WIDTH_VISUAL * LANE_COUNT + ANSWER_BOX_SPACING * (LANE_COUNT -1) + LANE_WIDTH_VISUAL;
             
             // Criar textura de pista realista
-            console.log("DEBUG: Creating track texture...");
             const textureCanvas = document.createElement('canvas');
             textureCanvas.width = 512;
             textureCanvas.height = 512;
             const ctx = textureCanvas.getContext('2d');
-            console.log("DEBUG: Canvas context created");
             
             // Fundo da pista (asfalto)
             ctx.fillStyle = '#e8e8e8';
@@ -1580,14 +1563,12 @@
         function resizeGame() { 
             const container = document.querySelector('.game-container');
             if (!container) {
-                console.error("DEBUG: Game container not found for resizeGame");
                 return;
             }
             const newWidth = container.clientWidth;
             const newHeight = container.clientHeight;
 
             if (newWidth === 0 || newHeight === 0) {
-                console.warn("DEBUG: Game container dimensions are zero during resizeGame.");
             }
 
             if (renderer && camera) {
@@ -1610,24 +1591,26 @@
             // Céu com cores fixas mais realistas (removida animação desnecessária)
 
             const targetX = (characterLane - (LANE_COUNT - 1) / 2) * ANSWER_BOX_SPACING;
-            if(characterGroup) {
+            if (characterGroup) {
                 characterGroup.position.x = THREE.MathUtils.lerp(characterGroup.position.x, targetX, 0.22);
-                
+
                 // Animação de corrida
                 if (!isJumping) {
                     const runCycle = timestamp * 0.01;
                     const bobAmount = Math.sin(runCycle) * 0.02;
                     characterGroup.position.y = bobAmount;
-                    
+
                     // Rotação sutil do corpo
                     characterGroup.rotation.z = Math.sin(runCycle * 0.5) * 0.05;
-                    
+
                     // Movimento dos braços
-                    const leftArm = characterGroup.children.find(child => child.position.x < 0 && child.geometry?.type === 'CylinderGeometry');
-                    const rightArm = characterGroup.children.find(child => child.position.x > 0 && child.geometry?.type === 'CylinderGeometry');
-                    if (leftArm && rightArm) {
-                        leftArm.rotation.x = Math.sin(runCycle) * 0.3;
-                        rightArm.rotation.x = -Math.sin(runCycle) * 0.3;
+                    if (characterGroup.children && characterGroup.children.length >= 2) { // Check children exist
+                        const leftArm = characterGroup.children.find(child => child.position.x < 0 && child.geometry?.type === 'CylinderGeometry');
+                        const rightArm = characterGroup.children.find(child => child.position.x > 0 && child.geometry?.type === 'CylinderGeometry');
+                        if (leftArm && rightArm) {
+                            leftArm.rotation.x = Math.sin(runCycle) * 0.3;
+                            rightArm.rotation.x = -Math.sin(runCycle) * 0.3;
+                        }
                     }
                     
                     // Criar partículas de poeira ocasionalmente
@@ -1670,7 +1653,7 @@
 
             laneMeshes.forEach(lane => { 
                 lane.position.z += movement;
-                if (lane.position.z > charZPos + LANE_DEPTH / 2 + 10) { 
+                if (lane.position.z > (charZPos + LANE_DEPTH / 2 + 10)) {
                     lane.position.z -= totalLaneDepth; 
                 }
             });
@@ -1679,7 +1662,7 @@
                 box.position.z += movement;
                 // Só esconde as caixas se elas passaram muito longe da câmera
                 // E se não estamos esperando que fiquem visíveis
-                if (box.position.z > camera.position.z + 15 && !answersVisible) { 
+                if (camera && box.position.z > camera.position.z + 15 && !answersVisible) { // Added camera null check
                      box.visible = false; 
                  }
             });
@@ -1725,18 +1708,18 @@
                 element.rotation.x += element.userData.rotationSpeed.x;
                 element.rotation.y += element.userData.rotationSpeed.y;
                 element.rotation.z += element.userData.rotationSpeed.z;
-                if (element.position.z > camera.position.z + 30) {
+                if (camera && element.position.z > camera.position.z + 30) { // Added camera null check
                     element.position.z = -LANE_DEPTH * LANE_SEGMENTS * 1.5 - Math.random() * 50;
                     element.position.x = (Math.random() - 0.5) * 50;
                     element.position.y = 5 + Math.random() * 15;
                 }
             });
 
-            if (starParticles && starParticles.geometry && starParticles.geometry.attributes.position) {
+            if (starParticles && starParticles.geometry && starParticles.geometry.attributes && starParticles.geometry.attributes.position && starParticles.geometry.attributes.position.array) { // Added checks for attributes and position.array
                 const positions = starParticles.geometry.attributes.position.array;
                 for (let i = 0; i < STAR_COUNT; i++) {
                     positions[i * 3 + 2] += movement * 1.2; 
-                    if (positions[i * 3 + 2] > camera.position.z + 10) {
+                    if (camera && positions[i * 3 + 2] > camera.position.z + 10) { // Added camera null check
                         positions[i * 3 + 2] = -LANE_DEPTH * LANE_SEGMENTS * 0.75 - Math.random() * 50; 
                         positions[i * 3] = (Math.random() - 0.5) * 60; 
                         positions[i * 3 + 1] = Math.random() * 25 + 2;   
@@ -1790,7 +1773,7 @@
                 mathElement.position.z += movement * 0.8;
                 
                 // Regenerar elemento quando sai de vista
-                if (mathElement.position.z > camera.position.z + 20) {
+                if (camera && mathElement.position.z > camera.position.z + 20) { // Added camera null check
                     mathElement.position.z = Math.random() * -200 - 50;
                     mathElement.position.x = (Math.random() - 0.5) * 40;
                     mathElement.position.y = Math.random() * 8 + 2;
@@ -1830,7 +1813,6 @@
             }
 
             if (answersVisible && questionTimer >= currentQuestionDuration) { 
-                console.log("DEBUG: Tempo esgotado!");
                 lives--; 
                 showFeedback(false, "Tempo Esgotado!"); 
                 updateScoreDisplay();
@@ -1851,13 +1833,12 @@
         }
         
         function resetAndGenerateNewQuestion() {
-            console.log("DEBUG: resetAndGenerateNewQuestion called");
             questionTimer = 0; // Garante que o timer seja resetado
             answersVisible = false; // Reset da flag
-            const charZ = characterGroup ? characterGroup.position.z : 1.5;
+            const charZPos = characterGroup ? characterGroup.position.z : 1.5; // Added null check and renamed for clarity
             answerBoxes.forEach((box, index) => {
                 const xPosition = (index - (LANE_COUNT - 1) / 2) * ANSWER_BOX_SPACING;
-                box.position.set(xPosition, ANSWER_BOX_Y_CENTER, charZ - 20 - Math.random() * 5);
+                box.position.set(xPosition, ANSWER_BOX_Y_CENTER, charZPos - 20 - Math.random() * 5);
                 if (box.material.map) box.material.map.dispose(); 
                 box.material.map = createTextTexture("?"); 
                 box.material.color.setHex(0xffffff); 
@@ -1872,7 +1853,6 @@
         }
 
         function initGame() { 
-            console.log("DEBUG: initGame called");
             score = 0;
             lives = INITIAL_LIVES;
             characterLane = 1;
@@ -1897,12 +1877,8 @@
 
             if (!renderer) { 
                 try {
-                    console.log("DEBUG: Iniciando initThreeJS...");
                     initThreeJS();
-                    console.log("DEBUG: initThreeJS concluído com sucesso");
                 } catch (e) {
-                    console.error("DEBUG: Error during initThreeJS:", e);
-                    console.error("DEBUG: Stack trace:", e.stack);
                     gameState = 'gameOver'; 
                     gameOverScreen.classList.remove('hidden');
                     finalScoreDisplay.textContent = "Erro ao iniciar o jogo: " + e.message;
@@ -1913,12 +1889,12 @@
                     characterGroup.position.x = (characterLane - (LANE_COUNT - 1) / 2) * ANSWER_BOX_SPACING; 
                     characterGroup.position.y = 0; 
                 }
-                const charZ = characterGroup ? characterGroup.position.z : 1.5;
+                const charZPos = characterGroup ? characterGroup.position.z : 1.5; // Added null check and renamed
                 laneMeshes.forEach((lane, index) => {
                     const segmentIndex = index % LANE_SEGMENTS; 
-                    lane.position.z = -LANE_DEPTH / 2 + charZ + 10 - (segmentIndex * LANE_DEPTH);
+                    lane.position.z = -LANE_DEPTH / 2 + charZPos + 10 - (segmentIndex * LANE_DEPTH);
                 });
-                if (starParticles && starParticles.geometry && starParticles.geometry.attributes.position) {
+                if (starParticles && starParticles.geometry && starParticles.geometry.attributes && starParticles.geometry.attributes.position) { // Added null check for attributes
                     const starPositions = starParticles.geometry.attributes.position.array;
                     for (let i = 0; i < STAR_COUNT; i++) {
                         starPositions[i * 3 + 2] = (Math.random() - 0.5) * (LANE_DEPTH * LANE_SEGMENTS * 1.5);
@@ -1931,18 +1907,15 @@
             resizeGame(); 
             
             if (!renderer || !camera || gameState === 'gameOver') { 
-                console.error("DEBUG: Renderer or camera not ready after init/reset. Aborting game start.");
                 if(gameState !== 'gameOver') gameOver(); 
                 return;
             }
             resetAndGenerateNewQuestion(); 
             lastFrameTime = performance.now();
             requestAnimationFrame(animate); 
-            console.log("DEBUG: initGame finished successfully, animation loop started.");
         }
 
         function generateQuestion() { 
-            console.log("DEBUG: generateQuestion called, score:", score);
             
             let correctAnswer, questionText;
             
@@ -2157,17 +2130,13 @@
                 }
             }, QUESTION_TO_ANSWERS_DELAY);
             
-            console.log("DEBUG: Question generated:", questionText, "Answer:", correctAnswer, "Options:", laneAnswers);
         }
 
         function handleAnswerSelection(collidedBoxIndex, collidedBoxMesh) {
-            console.log("DEBUG: handleAnswerSelection called for box index:", collidedBoxIndex);
             if (collidedBoxIndex < 0 || collidedBoxIndex >= laneAnswers.length) {
-                console.warn("DEBUG: Invalid box index in handleAnswerSelection");
                 return;
             }
             if (gameState !== 'playing' || !answersVisible || questionTimer >= currentQuestionDuration) {
-                 console.log("DEBUG: Answer selection ignored, game not playing or answers not visible or question timed out.");
                 return;
             }
 
@@ -2214,7 +2183,6 @@
         function updateLivesDisplay() { livesDisplay.textContent = `Vidas: ${lives}`; }
 
         function gameOver() { 
-            console.log("DEBUG: gameOver called");
             gameState = 'gameOver';
             finalScoreDisplay.textContent = `Sua pontuação: ${score}`;
             gameScreenContainer.classList.add('hidden');
@@ -2226,36 +2194,28 @@
         }
         
         function handleKeyPress(e) { 
-            console.log("DEBUG: Key pressed:", e.key, " gameState:", gameState, "isJumping:", isJumping);
             if (gameState !== 'playing') return;
             
             // Controles originais (setas e espaço)
             if (e.key === 'ArrowLeft') {
                 characterLane = Math.max(0, characterLane - 1);
-                console.log("DEBUG: characterLane to left:", characterLane);
             } else if (e.key === 'ArrowRight') {
                 characterLane = Math.min(LANE_COUNT - 1, characterLane + 1);
-                console.log("DEBUG: characterLane to right:", characterLane);
             } else if ((e.key === ' ' || e.key === 'ArrowUp') && !isJumping) { 
                 isJumping = true;
                 jumpVelocityY = JUMP_VELOCITY_INITIAL;
-                console.log("DEBUG: Jump initiated by key press");
             }
             
             // Novos controles WASD
             else if (e.key.toLowerCase() === 'a') {
                 characterLane = Math.max(0, characterLane - 1);
-                console.log("DEBUG: characterLane to left (A key):", characterLane);
             } else if (e.key.toLowerCase() === 'd') {
                 characterLane = Math.min(LANE_COUNT - 1, characterLane + 1);
-                console.log("DEBUG: characterLane to right (D key):", characterLane);
             } else if (e.key.toLowerCase() === 'w' && !isJumping) {
                 isJumping = true;
                 jumpVelocityY = JUMP_VELOCITY_INITIAL;
-                console.log("DEBUG: Jump initiated by W key");
             } else if (e.key.toLowerCase() === 's') {
                 isDucking = true;
-                console.log("DEBUG: Ducking initiated by S key");
                 // Efeito visual de agachamento
                 if (characterGroup) {
                     characterGroup.scale.y = 0.7; // Reduz altura do personagem
@@ -2266,9 +2226,10 @@
                     isDucking = false;
                     if (characterGroup) {
                         characterGroup.scale.y = 1; // Restaura altura normal
-                        characterGroup.position.y = isJumping ? characterGroup.position.y : 0; // Restaura posição se não estiver pulando
+                    if (!isJumping) { // Only reset y if not jumping
+                       characterGroup.position.y = 0;
                     }
-                    console.log("DEBUG: Ducking ended");
+                    }
                 }, 500); // Agacha por 500ms
             }
         }
@@ -2276,7 +2237,6 @@
         let touchStartX = 0;
         let touchStartY = 0; 
         function handleTouchStart(e) { 
-            console.log("DEBUG: Touch start, gameState:", gameState);
             if (gameState !== 'playing') return;
             if (e.touches.length === 1) { 
                 touchStartX = e.touches[0].screenX;
@@ -2285,7 +2245,6 @@
         }
 
         function handleTouchEnd(e) { 
-            console.log("DEBUG: Touch end, gameState:", gameState);
             if (gameState !== 'playing') return;
              if (e.changedTouches.length === 1) {
                 const touchEndX = e.changedTouches[0].screenX;
@@ -2301,15 +2260,12 @@
                     if (!isJumping) {
                         isJumping = true;
                         jumpVelocityY = JUMP_VELOCITY_INITIAL;
-                        console.log("DEBUG: Jump initiated by touch swipe");
                     }
                 } else { 
                     if (deltaX < -swipeXThreshold) {
                         characterLane = Math.max(0, characterLane - 1);
-                        console.log("DEBUG: characterLane to left by touch:", characterLane);
                     } else if (deltaX > swipeXThreshold) {
                         characterLane = Math.min(LANE_COUNT - 1, characterLane + 1);
-                        console.log("DEBUG: characterLane to right by touch:", characterLane);
                     }
                 }
             }
@@ -2374,10 +2330,10 @@
         function handleOrientationChange() {
             if (isMobile()) {
                 setTimeout(() => {
-                    if (renderer && canvas) {
+                    if (renderer && camera && canvas && canvas.parentElement) { // Added null checks
                         const container = canvas.parentElement;
-                        renderer.setSize(container.clientWidth, container.clientHeight);
-                        camera.aspect = container.clientWidth / container.clientHeight;
+                        renderer.setSize(container.clientWidth || 300, container.clientHeight || 150); // Fallback
+                        camera.aspect = (container.clientWidth || 1) / (container.clientHeight || 1); // Fallback
                         camera.updateProjectionMatrix();
                     }
                 }, 100);
@@ -2391,11 +2347,14 @@
         window.addEventListener('keydown', handleKeyPress);
         
         const gameAreaForTouch = document.querySelector('.game-container');
-        if (gameAreaForTouch) { 
-            gameAreaForTouch.addEventListener('touchstart', handleTouchStart, { passive: false }); 
+        if (gameAreaForTouch) {
+            gameAreaForTouch.addEventListener('touchstart', handleTouchStart, { passive: false });
             gameAreaForTouch.addEventListener('touchend', handleTouchEnd, { passive: false });
         } else {
-            console.error("DEBUG: Element .game-container not found for touch events.");
+            // It's good practice to log an error or handle the case where the element isn't found,
+            // but since the previous step removed all console logs,
+            // we will simply ensure the code doesn't break if the element is missing.
+            // In a real-world scenario, you might re-add a specific console.error here if critical.
         }
 
         window.addEventListener('resize', resizeGame);
@@ -2403,7 +2362,6 @@
         // Inicialização
         resizeGame(); 
         startScreen.classList.remove('hidden'); 
-        console.log("DEBUG: Game setup finished. Waiting for start button.");
 
     </script>
 </body>
