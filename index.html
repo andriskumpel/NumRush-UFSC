@@ -5,10 +5,11 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, maximum-scale=1.0">
     <title>NumRush: Aventura Matemática</title>
     <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
-    <script src="js/three.min.js"></script>
+    <!-- CORREÇÃO: Carregando Three.js a partir de um CDN -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <style>
         /* =================================
-           MOBILE FIRST CSS - BASE STYLES
+           MOBILE FIRST CSS - ESTILOS BASE
         ================================= */
         
         * {
@@ -47,7 +48,7 @@
         }
 
         /* =================================
-           TELAS DO JOGO
+           ECRÃS DO JOGO
         ================================= */
         
         .screen {
@@ -87,7 +88,7 @@
         }
 
         /* =================================
-           TELA INICIAL MOBILE-FIRST
+           ECRÃ INICIAL MOBILE-FIRST
         ================================= */
         
         .enhanced-start-screen {
@@ -412,7 +413,7 @@
         }
 
         /* =================================
-           CONTROLES TOUCH ON-SCREEN
+           CONTROLOS TOUCH NO ECRÃ
         ================================= */
         
         .touch-controls {
@@ -490,7 +491,7 @@
             position: absolute;
             top: 10px;
             left: 10px;
-            right: 10px;
+            right: 60px; /* Espaço para o botão de pausa */
             display: flex;
             justify-content: space-between;
             font-size: 0.8rem;
@@ -500,6 +501,24 @@
             padding: 0.5rem;
             border-radius: 8px;
             backdrop-filter: blur(5px);
+        }
+
+        .game-ui-btn {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: rgba(0, 0, 0, 0.5);
+            color: white;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-radius: 8px;
+            width: 40px;
+            height: 40px;
+            font-size: 1.2rem;
+            cursor: pointer;
+            z-index: 21;
+            display: flex;
+            align-items: center;
+            justify-content: center;
         }
 
         .question-display {
@@ -544,12 +563,13 @@
             color: #f56565;
         }
 
-        /* TELA GAME OVER - Mobile First */
-        #gameOverScreen {
-            background: linear-gradient(135deg, #1a202c 0%, #2d3748 100%);
+        /* ECRÃ GAME OVER & PAUSA */
+        #gameOverScreen, #pauseScreen {
+            background: rgba(0, 0, 0, 0.7);
+            backdrop-filter: blur(8px);
         }
 
-        #gameOverScreen h2 {
+        #gameOverScreen h2, #pauseScreen h2 {
             font-size: 1.5rem;
             margin-bottom: 1rem;
             color: #f59e0b;
@@ -755,14 +775,15 @@
             <div class="floating-math-bg"></div>
             <div class="content-wrapper">
                 <div class="logo-container">
-                    <img src="logo.png?v=2" alt="Num Rush Logo" class="main-logo">
+                    <!-- O nome do ficheiro da logo deve corresponder ao que guardou -->
+                    <img src="logo.png" alt="Num Rush Logo" class="main-logo">
                 </div>
                 
                 <div class="game-description">
                     <h2 class="subtitle">NumRush: Aventura Matemática</h2>
                     <p class="description-text">
                         Corra, pule e resolva equações matemáticas! 
-                        Use os controles na tela ou <kbd>ESPAÇO</kbd>/<kbd>W</kbd> para pular, <kbd>←→</kbd>/<kbd>A D</kbd> para mover, e <kbd>S</kbd> para agachar.
+                        Use os controlos no ecrã ou <kbd>ESPAÇO</kbd>/<kbd>W</kbd> para pular, <kbd>←→</kbd>/<kbd>A D</kbd> para mover, e <kbd>S</kbd> para agachar.
                     </p>
                 </div>
                 
@@ -806,6 +827,7 @@
              <canvas id="gameCanvas"></canvas> 
         </div>
         
+        <!-- CONTROLOS TOUCH NO ECRÃ -->
         <div id="touchControls" class="touch-controls">
             <button class="touch-btn touch-btn-left" id="touchLeft">←</button>
             <button class="touch-btn touch-btn-right" id="touchRight">→</button>
@@ -818,18 +840,25 @@
                 <span id="scoreDisplay">Pontos: 0</span>
                 <span id="livesDisplay">Vidas: 3</span>
             </div>
+            <button id="pauseButton" class="game-ui-btn">❚❚</button>
             <div id="questionDisplay" class="question-display">5 + 3 = ?</div>
             <div id="feedbackText" class="feedback-text"></div>
         </div>
 
         <div id="gameOverScreen" class="screen hidden">
             <h2>Fim de Jogo!</h2>
-            <p id="finalScoreDisplay">Sua pontuação: 0</p>
+            <p id="finalScoreDisplay">A sua pontuação: 0</p>
             <button id="restartButton">Jogar Novamente</button>
+        </div>
+
+        <div id="pauseScreen" class="screen hidden">
+            <h2>Pausado</h2>
+            <button id="resumeButton" class="enhanced-start-btn">Continuar</button>
         </div>
     </div>
 
     <script>
+    document.addEventListener('DOMContentLoaded', function() {
         // CÓDIGO CORRIGIDO ABAIXO
         function updateViewportHeight() {
             // Calcula 1% da altura da janela interna (viewport)
@@ -849,6 +878,9 @@
         const startButton = document.getElementById('startButton');
         const restartButton = document.getElementById('restartButton');
         const canvas = document.getElementById('gameCanvas'); 
+        const pauseButton = document.getElementById('pauseButton');
+        const pauseScreen = document.getElementById('pauseScreen');
+        const resumeButton = document.getElementById('resumeButton');
         
         const scoreDisplay = document.getElementById('scoreDisplay');
         const livesDisplay = document.getElementById('livesDisplay');
@@ -867,7 +899,7 @@
         const QUESTION_TO_ANSWERS_DELAY = 2000; // Delay entre mostrar pergunta e respostas
 
         // Variáveis de Estado do Jogo
-        let gameState = 'start';
+        let gameState = 'start'; // 'start', 'playing', 'paused', 'gameOver'
         let score = 0;
         let lives = INITIAL_LIVES;
         let characterLane = 1; 
@@ -893,7 +925,7 @@
         const pixelMathElements = []; // Elementos matemáticos pixelados
         const PIXEL_MATH_COUNT = 25; // Quantidade de elementos matemáticos
         
-        // Constantes do Personagem e Pulo
+        // Constantes da Personagem e Pulo
         const CHARACTER_HEAD_RADIUS = 0.22;
         const CHARACTER_TRUNK_HEIGHT = 0.65;
         const CHARACTER_TRUNK_RADIUS = 0.20;
@@ -1205,7 +1237,7 @@
                 answerBoxes.push(answerBox);
             }
 
-            // Elementos laterais 3D removidos por solicitação do usuário
+            // Elementos laterais 3D removidos por solicitação do utilizador
 
             // Elementos educativos flutuantes
             for (let i = 0; i < FLOATING_ELEMENT_COUNT; i++) {
@@ -1619,7 +1651,7 @@
                     const bobAmount = Math.sin(runCycle) * 0.02;
                     characterGroup.position.y = bobAmount;
                     
-                    // Rotação sutil do corpo
+                    // Rotação subtil do corpo
                     characterGroup.rotation.z = Math.sin(runCycle * 0.5) * 0.05;
                     
                     // Movimento dos braços
@@ -1677,8 +1709,8 @@
 
             answerBoxes.forEach(box => { 
                 box.position.z += movement;
-                // Só esconde as caixas se elas passaram muito longe da câmera
-                // E se não estamos esperando que fiquem visíveis
+                // Só esconde as caixas se elas passaram muito longe da câmara
+                // E se não estamos à espera que fiquem visíveis
                 if (box.position.z > camera.position.z + 15 && !answersVisible) { 
                      box.visible = false; 
                  }
@@ -1786,7 +1818,7 @@
                     }
                 }
                 
-                // Mover para frente com a cena
+                // Mover para a frente com a cena
                 mathElement.position.z += movement * 0.8;
                 
                 // Regenerar elemento quando sai de vista
@@ -1889,10 +1921,11 @@
             gameState = 'playing';
             startScreen.classList.add('hidden');
             gameOverScreen.classList.add('hidden');
+            pauseScreen.classList.add('hidden');
             gameScreenContainer.classList.remove('hidden');
             gameUI.classList.remove('hidden');
             
-            // Mostrar controles touch em mobile
+            // Mostrar controlos touch em mobile
             showTouchControls();
 
             if (!renderer) { 
@@ -2161,15 +2194,11 @@
         }
 
         function handleAnswerSelection(collidedBoxIndex, collidedBoxMesh) {
-            console.log("DEBUG: handleAnswerSelection called for box index:", collidedBoxIndex);
-            if (collidedBoxIndex < 0 || collidedBoxIndex >= laneAnswers.length) {
-                console.warn("DEBUG: Invalid box index in handleAnswerSelection");
+            if (gameState !== 'playing' || !answersVisible) {
                 return;
             }
-            if (gameState !== 'playing' || !answersVisible || questionTimer >= currentQuestionDuration) {
-                 console.log("DEBUG: Answer selection ignored, game not playing or answers not visible or question timed out.");
-                return;
-            }
+            // CORREÇÃO: Bloqueia a função para evitar múltiplas execuções
+            answersVisible = false;
 
             const selectedAnswerValue = laneAnswers[collidedBoxIndex];
             let isCorrect = false;
@@ -2216,49 +2245,60 @@
         function gameOver() { 
             console.log("DEBUG: gameOver called");
             gameState = 'gameOver';
-            finalScoreDisplay.textContent = `Sua pontuação: ${score}`;
+            finalScoreDisplay.textContent = `A sua pontuação: ${score}`;
             gameScreenContainer.classList.add('hidden');
             gameUI.classList.add('hidden');
             gameOverScreen.classList.remove('hidden');
             
-            // Esconder controles touch
+            // Esconder controlos touch
             hideTouchControls();
+        }
+
+        function togglePause() {
+            if (gameState !== 'playing' && gameState !== 'paused') return;
+
+            if (gameState === 'playing') {
+                gameState = 'paused';
+                pauseScreen.classList.remove('hidden');
+            } else if (gameState === 'paused') {
+                gameState = 'playing';
+                pauseScreen.classList.add('hidden');
+                lastFrameTime = performance.now();
+                requestAnimationFrame(animate);
+            }
         }
         
         function handleKeyPress(e) { 
-            console.log("DEBUG: Key pressed:", e.key, " gameState:", gameState, "isJumping:", isJumping);
+            if (e.key.toLowerCase() === 'p') {
+                togglePause();
+            }
+
             if (gameState !== 'playing') return;
-            
-            // Controles originais (setas e espaço)
+
+            // Controlos originais (setas e espaço)
             if (e.key === 'ArrowLeft') {
                 characterLane = Math.max(0, characterLane - 1);
-                console.log("DEBUG: characterLane to left:", characterLane);
             } else if (e.key === 'ArrowRight') {
                 characterLane = Math.min(LANE_COUNT - 1, characterLane + 1);
-                console.log("DEBUG: characterLane to right:", characterLane);
-            } else if ((e.key === ' ' || e.key === 'ArrowUp') && !isJumping) { 
+            } else if ((e.key === ' ' || e.key === 'ArrowUp') && !isJumping) {
+                e.preventDefault(); // Previne que o espaço ative botões
                 isJumping = true;
                 jumpVelocityY = JUMP_VELOCITY_INITIAL;
-                console.log("DEBUG: Jump initiated by key press");
             }
             
-            // Novos controles WASD
+            // Novos controlos WASD
             else if (e.key.toLowerCase() === 'a') {
                 characterLane = Math.max(0, characterLane - 1);
-                console.log("DEBUG: characterLane to left (A key):", characterLane);
             } else if (e.key.toLowerCase() === 'd') {
                 characterLane = Math.min(LANE_COUNT - 1, characterLane + 1);
-                console.log("DEBUG: characterLane to right (D key):", characterLane);
             } else if (e.key.toLowerCase() === 'w' && !isJumping) {
                 isJumping = true;
                 jumpVelocityY = JUMP_VELOCITY_INITIAL;
-                console.log("DEBUG: Jump initiated by W key");
             } else if (e.key.toLowerCase() === 's') {
                 isDucking = true;
-                console.log("DEBUG: Ducking initiated by S key");
                 // Efeito visual de agachamento
                 if (characterGroup) {
-                    characterGroup.scale.y = 0.7; // Reduz altura do personagem
+                    characterGroup.scale.y = 0.7; // Reduz altura da personagem
                     characterGroup.position.y = -0.1; // Abaixa um pouco
                 }
                 // Agachamento por tempo limitado
@@ -2266,9 +2306,8 @@
                     isDucking = false;
                     if (characterGroup) {
                         characterGroup.scale.y = 1; // Restaura altura normal
-                        characterGroup.position.y = isJumping ? characterGroup.position.y : 0; // Restaura posição se não estiver pulando
+                        characterGroup.position.y = isJumping ? characterGroup.position.y : 0; // Restaura posição se não estiver a pular
                     }
-                    console.log("DEBUG: Ducking ended");
                 }, 500); // Agacha por 500ms
             }
         }
@@ -2276,7 +2315,6 @@
         let touchStartX = 0;
         let touchStartY = 0; 
         function handleTouchStart(e) { 
-            console.log("DEBUG: Touch start, gameState:", gameState);
             if (gameState !== 'playing') return;
             if (e.touches.length === 1) { 
                 touchStartX = e.touches[0].screenX;
@@ -2285,7 +2323,6 @@
         }
 
         function handleTouchEnd(e) { 
-            console.log("DEBUG: Touch end, gameState:", gameState);
             if (gameState !== 'playing') return;
              if (e.changedTouches.length === 1) {
                 const touchEndX = e.changedTouches[0].screenX;
@@ -2301,39 +2338,50 @@
                     if (!isJumping) {
                         isJumping = true;
                         jumpVelocityY = JUMP_VELOCITY_INITIAL;
-                        console.log("DEBUG: Jump initiated by touch swipe");
                     }
                 } else { 
                     if (deltaX < -swipeXThreshold) {
                         characterLane = Math.max(0, characterLane - 1);
-                        console.log("DEBUG: characterLane to left by touch:", characterLane);
                     } else if (deltaX > swipeXThreshold) {
                         characterLane = Math.min(LANE_COUNT - 1, characterLane + 1);
-                        console.log("DEBUG: characterLane to right by touch:", characterLane);
                     }
                 }
             }
         }
         
         // Event Listeners
-        startButton.addEventListener('click', initGame);
-        restartButton.addEventListener('click', initGame);
+        startButton.addEventListener('click', () => {
+            initGame();
+            startButton.blur();
+        });
+        restartButton.addEventListener('click', () => {
+            initGame();
+            restartButton.blur();
+        });
+        pauseButton.addEventListener('click', () => {
+            togglePause();
+            pauseButton.blur();
+        });
+        resumeButton.addEventListener('click', () => {
+            togglePause();
+            resumeButton.blur();
+        });
         
-        // CONTROLES TOUCH MOBILE
+        // CONTROLOS TOUCH MOBILE
         const touchControls = document.getElementById('touchControls');
         const touchLeft = document.getElementById('touchLeft');
         const touchRight = document.getElementById('touchRight');
         const touchJump = document.getElementById('touchJump');
         const touchDuck = document.getElementById('touchDuck');
         
-        // Detectar se é dispositivo móvel
+        // Detetar se é dispositivo móvel
         function isMobile() {
             return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) || 
                    ('ontouchstart' in window) || 
                    window.innerWidth <= 768;
         }
         
-        // Mostrar controles touch apenas em mobile
+        // Mostrar controlos touch apenas em mobile
         function showTouchControls() {
             if (isMobile() && gameState === 'playing') {
                 touchControls.classList.add('show');
@@ -2344,33 +2392,33 @@
             touchControls.classList.remove('show');
         }
         
-        // Event listeners para controles touch
+        // Event listeners para controlos touch
         touchLeft.addEventListener('touchstart', (e) => {
             e.preventDefault();
-            handleKeyPress({ code: 'ArrowLeft', key: 'ArrowLeft' });
+            handleKeyPress({ key: 'ArrowLeft' });
         });
         
         touchRight.addEventListener('touchstart', (e) => {
             e.preventDefault();
-            handleKeyPress({ code: 'ArrowRight', key: 'ArrowRight' });
+            handleKeyPress({ key: 'ArrowRight' });
         });
         
         touchJump.addEventListener('touchstart', (e) => {
             e.preventDefault();
-            handleKeyPress({ code: 'Space', key: ' ' });
+            handleKeyPress({ key: ' ' });
         });
         
         touchDuck.addEventListener('touchstart', (e) => {
             e.preventDefault();
-            handleKeyPress({ code: 'KeyS', key: 's' });
+            handleKeyPress({ key: 's' });
         });
         
         // Evitar scroll em mobile
         document.addEventListener('touchmove', (e) => {
-            e.preventDefault();
+            if (gameState === 'playing') e.preventDefault();
         }, { passive: false });
         
-        // Detectar orientação mobile
+        // Detetar orientação mobile
         function handleOrientationChange() {
             if (isMobile()) {
                 setTimeout(() => {
@@ -2405,6 +2453,7 @@
         startScreen.classList.remove('hidden'); 
         console.log("DEBUG: Game setup finished. Waiting for start button.");
 
+    });
     </script>
 </body>
 </html>
