@@ -174,7 +174,7 @@
 
         /* LOGO - Mobile First */
         .logo-container {
-            margin-bottom: 1rem;
+            margin-bottom: 0.5rem; /* ANTES: 1rem */
             animation: logo-entrance 1.5s ease-out 0.3s both;
         }
 
@@ -205,7 +205,7 @@
         /* TEXTOS - Mobile First */
         .game-description {
             text-align: center;
-            margin-bottom: 1rem;
+            margin-bottom: 0.8rem; /* ANTES: 1rem */
             animation: slide-in-left 1s ease-out 0.6s both;
         }
 
@@ -221,18 +221,18 @@
         }
 
         .subtitle {
-            font-size: 1.2rem;
+            font-size: 1.1rem; /* ANTES: 1.2rem */
             color: #f59e0b;
-            margin-bottom: 0.8rem;
+            margin-bottom: 0.6rem;
             text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
             font-weight: bold;
             line-height: 1.4;
         }
 
         .description-text {
-            font-size: 0.7rem;
+            font-size: 0.65rem; /* ANTES: 0.7rem */
             color: #e2e8f0;
-            line-height: 1.6;
+            line-height: 1.5;
             max-width: 300px;
             margin: 0 auto;
         }
@@ -254,8 +254,11 @@
             background: linear-gradient(145deg, rgba(59, 130, 246, 0.2), rgba(37, 99, 235, 0.3));
             border: 2px solid rgba(59, 130, 246, 0.4);
             border-radius: 10px;
-            padding: 0.8rem 1rem;
-            margin-bottom: 1rem;
+            margin-bottom: 0.8rem; /* ANTES: 1rem */
+            padding-top: 0.6rem;    /* Adicionado para ajustar */
+            padding-right: 1rem;
+            padding-bottom: 0.6rem; /* Adicionado para ajustar */
+            padding-left: 1rem;
             backdrop-filter: blur(10px);
             animation: slide-in-right 1s ease-out 0.9s both;
             max-width: 320px;
@@ -301,7 +304,7 @@
 
         /* BOTÃO INICIAR - Mobile First */
         .start-controls {
-            margin-bottom: 1rem;
+            margin-bottom: 0.8rem; /* ANTES: 1rem */
             animation: scale-in 1s ease-out 1.2s both;
         }
 
@@ -956,13 +959,20 @@
     document.addEventListener('DOMContentLoaded', function() {
         // CÓDIGO CORRIGIDO ABAIXO
         function updateViewportHeight() {
-            // Calcula 1% da altura da janela interna (viewport)
-            let vh = window.innerHeight * 0.01;
+            // Prefere o visualViewport se estiver disponível para obter a altura real
+            const viewportHeight =
+                (window.visualViewport && window.visualViewport.height) ||
+                window.innerHeight;
+            // Calcula 1% da altura da área visível
+            const vh = viewportHeight * 0.01;
             // Define o valor da variável '--vh' no elemento raiz (<html>)
             document.documentElement.style.setProperty('--vh', `${vh}px`);
         }
         window.addEventListener('resize', updateViewportHeight);
         window.addEventListener('orientationchange', updateViewportHeight);
+        if (window.visualViewport) {
+            window.visualViewport.addEventListener('resize', updateViewportHeight);
+        }
         updateViewportHeight();
 
         // Elementos da UI
