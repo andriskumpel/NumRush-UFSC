@@ -1056,8 +1056,9 @@
 
             console.log("DEBUG: Creating camera...");
             camera = new THREE.PerspectiveCamera(75, (canvas.clientWidth || 1) / (canvas.clientHeight || 1), 0.1, 2000); 
-            camera.position.set(0, 2.5, 5); 
-            camera.lookAt(0, 1.0, 0); 
+            camera.position.set(0, 2.5, 5);
+            camera.lookAt(0, 1.0, 0);
+            adjustCameraForAspect();
             console.log("DEBUG: Camera created successfully");
 
             console.log("DEBUG: Creating renderer...");
@@ -1704,6 +1705,15 @@
             }
         }
 
+        function adjustCameraForAspect() {
+            if (!camera) return;
+            if (camera.aspect < 1) {
+                camera.position.z = 7;
+            } else {
+                camera.position.z = 5;
+            }
+        }
+
         function resizeGame() { 
             const container = document.querySelector('.game-container');
             if (!container) {
@@ -1718,8 +1728,9 @@
             }
 
             if (renderer && camera) {
-                renderer.setSize(newWidth || 300, newHeight || 150); 
-                camera.aspect = (newWidth || 1) / (newHeight || 1); 
+                renderer.setSize(newWidth || 300, newHeight || 150);
+                camera.aspect = (newWidth || 1) / (newHeight || 1);
+                adjustCameraForAspect();
                 camera.updateProjectionMatrix();
             }
          }
@@ -2521,6 +2532,7 @@
                         const container = canvas.parentElement;
                         renderer.setSize(container.clientWidth, container.clientHeight);
                         camera.aspect = container.clientWidth / container.clientHeight;
+                        adjustCameraForAspect();
                         camera.updateProjectionMatrix();
                     }
                 }, 100);
