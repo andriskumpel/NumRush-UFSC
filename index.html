@@ -2387,7 +2387,7 @@
             } else if (e.key === 'ArrowRight') {
                 characterLane = Math.min(LANE_COUNT - 1, characterLane + 1);
             } else if ((e.key === ' ' || e.key === 'ArrowUp') && !isJumping) {
-                e.preventDefault(); // Previne que o espaço ative botões
+                if (e.preventDefault) e.preventDefault(); // Previne que o espaço ative botões
                 isJumping = true;
                 jumpVelocityY = JUMP_VELOCITY_INITIAL;
             }
