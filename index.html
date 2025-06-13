@@ -956,13 +956,20 @@
     document.addEventListener('DOMContentLoaded', function() {
         // CÓDIGO CORRIGIDO ABAIXO
         function updateViewportHeight() {
-            // Calcula 1% da altura da janela interna (viewport)
-            let vh = window.innerHeight * 0.01;
+            // Prefere o visualViewport se estiver disponível para obter a altura real
+            const viewportHeight =
+                (window.visualViewport && window.visualViewport.height) ||
+                window.innerHeight;
+            // Calcula 1% da altura da área visível
+            const vh = viewportHeight * 0.01;
             // Define o valor da variável '--vh' no elemento raiz (<html>)
             document.documentElement.style.setProperty('--vh', `${vh}px`);
         }
         window.addEventListener('resize', updateViewportHeight);
         window.addEventListener('orientationchange', updateViewportHeight);
+        if (window.visualViewport) {
+            window.visualViewport.addEventListener('resize', updateViewportHeight);
+        }
         updateViewportHeight();
 
         // Elementos da UI
