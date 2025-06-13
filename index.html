@@ -1057,26 +1057,17 @@
 
         function initThreeJS() {
             console.log("DEBUG: initThreeJS called");
-            console.log("DEBUG: Creating scene...");
             scene = new THREE.Scene();
-            console.log("DEBUG: Scene created successfully");
 
-            console.log("DEBUG: Creating camera...");
-            camera = new THREE.PerspectiveCamera(75, (canvas.clientWidth || 1) / (canvas.clientHeight || 1), 0.1, 2000); 
+            // A câmera inicia com uma proporção temporária. resizeGame() irá corrigi-la.
+            camera = new THREE.PerspectiveCamera(75, 16 / 9, 0.1, 2000);
             camera.position.set(0, 2.5, 5);
             camera.lookAt(0, 1.0, 0);
-            adjustCameraForAspect();
-            console.log("DEBUG: Camera created successfully");
 
-            console.log("DEBUG: Creating renderer...");
+            // O renderer é criado sem um tamanho definido ainda. resizeGame() cuidará disso.
             renderer = new THREE.WebGLRenderer({ canvas: canvas, antialias: true });
-            renderer.setSize(canvas.clientWidth || 300, canvas.clientHeight || 150); 
-            if (canvas.clientWidth === 0 || canvas.clientHeight === 0) {
-                console.warn("DEBUG: Canvas dimensions are zero during initThreeJS. Using fallback dimensions.");
-            }
             renderer.shadowMap.enabled = true;
             renderer.shadowMap.type = THREE.PCFSoftShadowMap;
-            console.log("DEBUG: Renderer configured successfully"); 
 
             // ILUMINAÇÃO CINEMATOGRÁFICA AVANÇADA
             console.log("DEBUG: Setting up lighting...");
@@ -1721,26 +1712,21 @@
             }
         }
 
-        function resizeGame() { 
-            const container = document.querySelector('.game-container');
-            if (!container) {
-                console.error("DEBUG: Game container not found for resizeGame");
-                return;
-            }
-            const newWidth = container.clientWidth;
-            const newHeight = container.clientHeight;
+        function resizeGame() {
+            // Usa as dimensões da janela, que é mais confiável.
+            const newWidth = window.innerWidth;
+            const newHeight = window.innerHeight;
 
-            if (newWidth === 0 || newHeight === 0) {
-                console.warn("DEBUG: Game container dimensions are zero during resizeGame.");
-            }
-
-            if (renderer && camera) {
-                renderer.setSize(newWidth || 300, newHeight || 150);
-                camera.aspect = (newWidth || 1) / (newHeight || 1);
-                adjustCameraForAspect();
+            if (camera) {
+                camera.aspect = newWidth / newHeight;
+                adjustCameraForAspect(); // Sua função que ajusta o zoom da câmera
                 camera.updateProjectionMatrix();
             }
-         }
+
+            if (renderer) {
+                renderer.setSize(newWidth, newHeight);
+            }
+        }
         
         let lastFrameTime = 0;
         function animate(timestamp) {
@@ -2532,23 +2518,11 @@
         }, { passive: false });
         
         // Detetar orientação mobile
-        function handleOrientationChange() {
-            if (isMobile()) {
-                setTimeout(() => {
-                    if (renderer && canvas) {
-                        const container = canvas.parentElement;
-                        renderer.setSize(container.clientWidth, container.clientHeight);
-                        camera.aspect = container.clientWidth / container.clientHeight;
-                        adjustCameraForAspect();
-                        camera.updateProjectionMatrix();
-                    }
-                }, 100);
-            }
-            updateViewportHeight();
-        }
-        
-        window.addEventListener('orientationchange', handleOrientationChange);
-        window.addEventListener('resize', handleOrientationChange);
+        window.addEventListener('resize', resizeGame);
+        window.addEventListener('orientationchange', () => {
+            // Adiciona um pequeno delay na mudança de orientação para dar tempo ao navegador
+            setTimeout(resizeGame, 100);
+        });
         
         window.addEventListener('keydown', handleKeyPress);
         
@@ -2560,11 +2534,9 @@
             console.error("DEBUG: Element .game-container not found for touch events.");
         }
 
-        window.addEventListener('resize', resizeGame);
-
         // Inicialização
-        resizeGame(); 
-        startScreen.classList.remove('hidden'); 
+        resizeGame();
+        startScreen.classList.remove('hidden');
         console.log("DEBUG: Game setup finished. Waiting for start button.");
 
     });
