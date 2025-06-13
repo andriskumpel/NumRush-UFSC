@@ -767,6 +767,101 @@
                 line-height: 5rem;
             }
         }
+
+        /* =================================
+           MOBILE LANDSCAPE
+        ================================= */
+
+        @media (orientation: landscape) and (max-width: 1024px) {
+            .touch-controls {
+                height: 80px;
+            }
+
+            .touch-btn-left {
+                bottom: 10px;
+                left: 10px;
+                width: 50px;
+                height: 50px;
+            }
+
+            .touch-btn-right {
+                bottom: 10px;
+                left: 70px;
+                width: 50px;
+                height: 50px;
+            }
+
+            .touch-btn-duck {
+                bottom: 10px;
+                right: 80px;
+                width: 40px;
+                height: 40px;
+            }
+
+            .touch-btn-jump {
+                bottom: 10px;
+                right: 20px;
+                width: 60px;
+                height: 60px;
+            }
+
+            .question-display {
+                bottom: 90px;
+                font-size: 0.9rem;
+            }
+
+            .game-info {
+                top: 5px;
+                font-size: 0.7rem;
+            }
+        }
+
+        /* =================================
+           MOBILE PORTRAIT
+        ================================= */
+
+        @media (orientation: portrait) and (max-width: 768px) {
+            .touch-controls {
+                height: 120px;
+            }
+
+            .touch-btn-left {
+                bottom: 20px;
+                left: 20px;
+                width: 60px;
+                height: 60px;
+            }
+
+            .touch-btn-right {
+                bottom: 20px;
+                left: 110px;
+                width: 60px;
+                height: 60px;
+            }
+
+            .touch-btn-duck {
+                bottom: 20px;
+                right: 110px;
+                width: 50px;
+                height: 50px;
+            }
+
+            .touch-btn-jump {
+                bottom: 20px;
+                right: 20px;
+                width: 70px;
+                height: 70px;
+            }
+
+            .question-display {
+                bottom: 110px;
+                font-size: 1.1rem;
+            }
+
+            .game-info {
+                font-size: 0.8rem;
+            }
+        }
     </style>
 </head>
 <body>
