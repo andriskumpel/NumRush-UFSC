@@ -5,11 +5,10 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, maximum-scale=1.0">
     <title>NumRush: Aventura Matemática</title>
     <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
-    <!-- CORREÇÃO: Carregando Three.js a partir de um CDN -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <style>
         /* =================================
-           MOBILE FIRST CSS - ESTILOS BASE
+            MOBILE FIRST CSS - ESTILOS BASE
         ================================= */
         
         * {
@@ -48,7 +47,7 @@
         }
 
         /* =================================
-           ECRÃS DO JOGO
+            ECRÃS DO JOGO
         ================================= */
         
         .screen {
@@ -73,7 +72,7 @@
         }
 
         /* =================================
-           CANVAS DO JOGO
+            CANVAS DO JOGO
         ================================= */
         
         #gameCanvas {
@@ -88,7 +87,7 @@
         }
 
         /* =================================
-           ECRÃ INICIAL MOBILE-FIRST
+            ECRÃ INICIAL MOBILE-FIRST
         ================================= */
         
         .enhanced-start-screen {
@@ -413,7 +412,7 @@
         }
 
         /* =================================
-           CONTROLOS TOUCH NO ECRÃ
+            CONTROLOS TOUCH NO ECRÃ
         ================================= */
         
         .touch-controls {
@@ -484,7 +483,7 @@
         }
 
         /* =================================
-           INTERFACE DO JOGO
+            INTERFACE DO JOGO
         ================================= */
         
         .game-info {
@@ -580,7 +579,7 @@
             margin-bottom: 2rem;
         }
 
-        #restartButton {
+        #restartButton, #resumeButton {
             font-family: 'Press Start 2P', cursive;
             background: linear-gradient(145deg, #f59e0b, #d97706);
             color: white;
@@ -595,13 +594,15 @@
         }
 
         #restartButton:hover,
-        #restartButton:active {
+        #restartButton:active,
+        #resumeButton:hover,
+        #resumeButton:active {
             transform: translateY(-2px) scale(1.05);
             box-shadow: 0 12px 30px rgba(245, 158, 11, 0.6);
         }
 
         /* =================================
-           TABLETS - MIN-WIDTH: 768px
+            TABLETS - MIN-WIDTH: 768px
         ================================= */
         
         @media (min-width: 768px) {
@@ -681,7 +682,7 @@
         }
 
         /* =================================
-           DESKTOP - MIN-WIDTH: 1024px
+            DESKTOP - MIN-WIDTH: 1024px
         ================================= */
         
         @media (min-width: 1024px) {
@@ -769,7 +770,7 @@
         }
 
         /* =================================
-           MOBILE LANDSCAPE
+            MOBILE LANDSCAPE
         ================================= */
 
         @media (orientation: landscape) and (max-width: 1024px) {
@@ -817,7 +818,7 @@
         }
 
         /* =================================
-           MOBILE PORTRAIT
+            MOBILE PORTRAIT
         ================================= */
 
         @media (orientation: portrait) and (max-width: 768px) {
@@ -870,7 +871,6 @@
             <div class="floating-math-bg"></div>
             <div class="content-wrapper">
                 <div class="logo-container">
-                    <!-- O nome do ficheiro da logo deve corresponder ao que guardou -->
                     <img src="logo.png" alt="Num Rush Logo" class="main-logo">
                 </div>
                 
@@ -922,7 +922,6 @@
              <canvas id="gameCanvas"></canvas> 
         </div>
         
-        <!-- CONTROLOS TOUCH NO ECRÃ -->
         <div id="touchControls" class="touch-controls">
             <button class="touch-btn touch-btn-left" id="touchLeft">←</button>
             <button class="touch-btn touch-btn-right" id="touchRight">→</button>
@@ -956,13 +955,10 @@
     document.addEventListener('DOMContentLoaded', function() {
         // CÓDIGO CORRIGIDO ABAIXO
         function updateViewportHeight() {
-            // Prefere o visualViewport se estiver disponível para obter a altura real
             const viewportHeight =
                 (window.visualViewport && window.visualViewport.height) ||
                 window.innerHeight;
-            // Calcula 1% da altura da área visível
             const vh = viewportHeight * 0.01;
-            // Define o valor da variável '--vh' no elemento raiz (<html>)
             document.documentElement.style.setProperty('--vh', `${vh}px`);
         }
         window.addEventListener('resize', updateViewportHeight);
@@ -994,7 +990,7 @@
         const LANE_COUNT = 3; 
         const INITIAL_LIVES = 3;
         const QUESTION_DURATION_INITIAL = 9000; 
-        const QUESTION_DURATION_MIN = 4000;    
+        const QUESTION_DURATION_MIN = 4000;  
         const QUESTION_DURATION_DECREMENT = 250; 
         const POINTS_FOR_DECREMENT = 30;
         const NEXT_QUESTION_DELAY = 3000;
@@ -1018,7 +1014,6 @@
         const laneMeshes = []; 
         const answerBoxes = []; 
         let skydome;
-        // const sideElements = []; // removido 
         const floatingElements = [];
         let starParticles;
         let shirtMaterial; 
@@ -1044,7 +1039,6 @@
         const LANE_DEPTH = 60; 
         const LANE_SEGMENTS = 2; 
         const GAME_SPEED = 4; 
-        // const SIDE_ELEMENT_COUNT = 15; // removido com os elementos laterais 
         const FLOATING_ELEMENT_COUNT = 10;
         const STAR_COUNT = 300;
         
@@ -1052,9 +1046,38 @@
         const ANSWER_BOX_Y_CENTER = 2.7; 
         const ANSWER_BOX_SPACING = ANSWER_BOX_SIZE.width * 1.8; 
 
-        // Variáveis de céu removidas (céu agora tem cores fixas)
+        // ==========================================================
+        //         INÍCIO DAS FUNÇÕES ALTERADAS
+        // ==========================================================
 
+        /**
+         * ### FUNÇÃO ALTERADA ###
+         * Esta é a função central para redimensionar o jogo.
+         * Usa `window.innerWidth` e `window.innerHeight` para garantir
+         * que o tamanho seja sempre o da janela do navegador.
+         */
+        function resizeGame() {
+            // Usa as dimensões da janela, que é mais confiável.
+            const newWidth = window.innerWidth;
+            const newHeight = window.innerHeight;
 
+            if (camera) {
+                camera.aspect = newWidth / newHeight;
+                adjustCameraForAspect(); // Sua função que ajusta o zoom da câmera
+                camera.updateProjectionMatrix();
+            }
+
+            if (renderer) {
+                renderer.setSize(newWidth, newHeight);
+            }
+        }
+
+        /**
+         * ### FUNÇÃO ALTERADA ###
+         * Simplificada para apenas criar os objetos.
+         * A definição do tamanho da câmera e do renderer foi removida
+         * porque agora é responsabilidade da função resizeGame().
+         */
         function initThreeJS() {
             console.log("DEBUG: initThreeJS called");
             scene = new THREE.Scene();
@@ -1068,14 +1091,13 @@
             renderer = new THREE.WebGLRenderer({ canvas: canvas, antialias: true });
             renderer.shadowMap.enabled = true;
             renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+            
+            console.log("DEBUG: Renderer e Camera criados. O resto da cena será construído.");
 
             // ILUMINAÇÃO CINEMATOGRÁFICA AVANÇADA
-            console.log("DEBUG: Setting up lighting...");
-            // Luz ambiente suave
             const ambientLight = new THREE.AmbientLight(0xfff8e1, 0.6);
             scene.add(ambientLight);
             
-            // Luz principal (sol)
             const sunLight = new THREE.DirectionalLight(0xffffff, 0.8);
             sunLight.position.set(15, 20, 10);
             sunLight.castShadow = true;
@@ -1090,17 +1112,14 @@
             sunLight.shadow.bias = -0.0005;
             scene.add(sunLight);
             
-            // Luz de preenchimento azulada (céu)
             const skyLight = new THREE.DirectionalLight(0x87ceeb, 0.4);
             skyLight.position.set(-10, 15, -5);
             scene.add(skyLight);
             
-            // Luz traseira para contorno
             const rimLight = new THREE.DirectionalLight(0xffa726, 0.3);
             rimLight.position.set(0, 8, -20);
             scene.add(rimLight);
             
-            // Holofote focado na pista
             const trackSpotlight = new THREE.SpotLight(0xffffff, 0.6);
             trackSpotlight.position.set(0, 15, 10);
             trackSpotlight.target.position.set(0, 0, -10);
@@ -1111,14 +1130,13 @@
             trackSpotlight.castShadow = true;
             scene.add(trackSpotlight);
             scene.add(trackSpotlight.target);
-            console.log("DEBUG: Lighting setup complete");
-            
-            console.log("DEBUG: Creating sky...");
+
+            // CÉU
             const skyGeometry = new THREE.SphereGeometry(1000, 32, 15); 
             const skyShaderMaterial = new THREE.ShaderMaterial({
                 uniforms: {
-                    topColor: { value: new THREE.Color(0x87ceeb) }, // Azul céu
-                    bottomColor: { value: new THREE.Color(0xffd700) }, // Dourado no horizonte
+                    topColor: { value: new THREE.Color(0x87ceeb) },
+                    bottomColor: { value: new THREE.Color(0xffd700) },
                     offset: { value: 33 },
                     exponent: { value: 0.8 }
                 },
@@ -1145,9 +1163,9 @@
             });
             skydome = new THREE.Mesh(skyGeometry, skyShaderMaterial);
             scene.add(skydome);
-            console.log("DEBUG: Sky created successfully");
-
-            console.log("DEBUG: Creating character...");
+            
+            // ... (O restante do seu código de criação de objetos permanece aqui, sem alterações)
+            // PERSONAGEM
             characterGroup = new THREE.Group();
             const skinMaterial = new THREE.MeshStandardMaterial({ color: 0xffdba1, roughness: 0.8, metalness: 0.1 });
             shirtMaterial = new THREE.MeshStandardMaterial({ color: 0x3b82f6, roughness: 0.7, metalness: 0.1 }); 
@@ -1189,31 +1207,25 @@
             characterGroup.position.z = 1.5; 
             characterGroup.position.y = 0; 
             scene.add(characterGroup);
-            console.log("DEBUG: Character created successfully");
 
-            // PISTA PRINCIPAL APRIMORADA
-            console.log("DEBUG: Creating track...");
+            // PISTA PRINCIPAL E DEMAIS OBJETOS...
+            // (Todo o resto da sua função `initThreeJS` continua aqui)
+             // PISTA PRINCIPAL APRIMORADA
             const groundLaneWidth = LANE_WIDTH_VISUAL * LANE_COUNT + ANSWER_BOX_SPACING * (LANE_COUNT -1) + LANE_WIDTH_VISUAL;
             
-            // Criar textura de pista realista
-            console.log("DEBUG: Creating track texture...");
             const textureCanvas = document.createElement('canvas');
             textureCanvas.width = 512;
             textureCanvas.height = 512;
             const ctx = textureCanvas.getContext('2d');
-            console.log("DEBUG: Canvas context created");
             
-            // Fundo da pista (asfalto)
             ctx.fillStyle = '#e8e8e8';
             ctx.fillRect(0, 0, 512, 512);
             
-            // Adicionar textura de asfalto
             for (let i = 0; i < 1000; i++) {
                 ctx.fillStyle = `rgba(${200 + Math.random() * 40}, ${200 + Math.random() * 40}, ${200 + Math.random() * 40}, 0.3)`;
                 ctx.fillRect(Math.random() * 512, Math.random() * 512, 2, 2);
             }
             
-            // Adicionar linhas de junção
             for (let y = 0; y < 512; y += 64) {
                 ctx.strokeStyle = '#d0d0d0';
                 ctx.lineWidth = 1;
@@ -1242,7 +1254,6 @@
                 groundLane.position.set(0, -0.1, -LANE_DEPTH / 2 + (characterGroup ? characterGroup.position.z : 1.5) + 10 - (j * LANE_DEPTH));
                 groundLane.receiveShadow = true;
                 
-                // Linhas divisórias das lanes mais visíveis
                 for (let lane = 0; lane <= LANE_COUNT; lane++) {
                     const lineX = -groundLaneWidth/2 + (lane * (groundLaneWidth / LANE_COUNT));
                     
@@ -1257,7 +1268,6 @@
                     groundLane.add(line);
                 }
                 
-                // Números das lanes
                 for (let lane = 0; lane < LANE_COUNT; lane++) {
                     const laneNumber = lane + 1;
                     const laneX = -groundLaneWidth/2 + (lane * (groundLaneWidth / LANE_COUNT)) + (groundLaneWidth / LANE_COUNT / 2);
@@ -1275,7 +1285,6 @@
                     groundLane.add(numberMesh);
                 }
                 
-                // Bordas elevadas nas laterais
                 const borderHeight = 0.5;
                 const borderWidth = 0.3;
                 
@@ -1298,13 +1307,10 @@
                 scene.add(groundLane);
                 laneMeshes.push(groundLane);
             }
-
-            // Caixas de resposta com bordas arredondadas (simuladas)
             const answerBoxGeometry = new THREE.BoxGeometry(ANSWER_BOX_SIZE.width, ANSWER_BOX_SIZE.height, ANSWER_BOX_SIZE.depth);
             for (let i = 0; i < LANE_COUNT; i++) { 
                 const xPosition = (i - (LANE_COUNT - 1) / 2) * ANSWER_BOX_SPACING;
                 
-                // Material estilo quadro escolar
                 const answerMaterial = new THREE.MeshStandardMaterial({ 
                     map: createTextTexture("?"), 
                     transparent: true, 
@@ -1321,7 +1327,6 @@
                 answerBox.position.set(xPosition, ANSWER_BOX_Y_CENTER, -8 - Math.random() * 3);
                 answerBox.castShadow = true;
                 
-                // Adicionar borda estilo giz
                 const edgeGeometry = new THREE.EdgesGeometry(answerBoxGeometry);
                 const edgeMaterial = new THREE.LineBasicMaterial({ color: 0x66bb6a, linewidth: 2 });
                 const edges = new THREE.LineSegments(edgeGeometry, edgeMaterial);
@@ -1330,16 +1335,11 @@
                 scene.add(answerBox);
                 answerBoxes.push(answerBox);
             }
-
-            // Elementos laterais 3D removidos por solicitação do utilizador
-
-            // Elementos educativos flutuantes
             for (let i = 0; i < FLOATING_ELEMENT_COUNT; i++) {
                 const elementType = Math.floor(Math.random() * 4);
                 let floatingObj;
                 
                 if (elementType === 0) {
-                    // Números flutuantes
                     const numberGeo = new THREE.BoxGeometry(1.5, 1.5, 0.3);
                     const numberMat = new THREE.MeshStandardMaterial({ 
                         color: 0x4caf50,
@@ -1348,7 +1348,6 @@
                     });
                     floatingObj = new THREE.Mesh(numberGeo, numberMat);
                     
-                    // Adicionar texto do número
                     const num = Math.floor(Math.random() * 10);
                     const numTexture = createTextTexture(num.toString(), 64, 64, 30, 'rgba(255,255,255,0.9)', '#1b5e20');
                     const numMesh = new THREE.Mesh(
@@ -1359,7 +1358,6 @@
                     floatingObj.add(numMesh);
                     
                 } else if (elementType === 1) {
-                    // Símbolos matemáticos
                     const symbolGeo = new THREE.CylinderGeometry(0.8, 0.8, 0.3, 16);
                     const symbolMat = new THREE.MeshStandardMaterial({ 
                         color: 0xff9800,
@@ -1370,7 +1368,6 @@
                     floatingObj.rotation.x = Math.PI / 2;
                     
                 } else if (elementType === 2) {
-                    // Lápis gigante
                     const pencilGroup = new THREE.Group();
                     const pencilBody = new THREE.Mesh(
                         new THREE.CylinderGeometry(0.3, 0.3, 2, 8),
@@ -1386,7 +1383,6 @@
                     floatingObj = pencilGroup;
                     
                 } else {
-                    // Globo terrestre
                     const globeGeo = new THREE.SphereGeometry(1, 16, 12);
                     const globeMat = new THREE.MeshStandardMaterial({ 
                         color: 0x2196f3,
@@ -1399,7 +1395,7 @@
 
                 floatingObj.position.set(
                     (Math.random() - 0.5) * 40, 
-                    5 + Math.random() * 10,     
+                    5 + Math.random() * 10,   
                     -LANE_DEPTH - Math.random() * LANE_DEPTH * 2 
                 );
                 floatingObj.rotation.set(Math.random() * Math.PI, Math.random() * Math.PI, Math.random() * Math.PI);
@@ -1418,17 +1414,13 @@
             starParticles = new THREE.Points(starGeo, starMat);
             scene.add(starParticles);
 
-            // Criar elementos matemáticos pixelados flutuantes
             const mathTexts = [
-                // Números simples
                 '0', '1', '2', '3', '4', '5', '6', '7', '8', '9',
                 '10', '15', '20', '25', '50', '100',
-                // Operações básicas
                 '2+3=5', '4+6=10', '7+8=15', '9+1=10',
                 '10-3=7', '15-5=10', '20-8=12', '25-9=16',
                 '2×3=6', '4×5=20', '3×7=21', '6×8=48',
                 '12÷3=4', '20÷4=5', '15÷5=3', '24÷6=4',
-                // Símbolos
                 '+', '-', '×', '÷', '=', '%'
             ];
 
@@ -1446,14 +1438,12 @@
                 const geometry = new THREE.PlaneGeometry(2.5, 0.8);
                 const mathElement = new THREE.Mesh(geometry, material);
                 
-                // Posição inicial aleatória
                 mathElement.position.set(
-                    (Math.random() - 0.5) * 40, // X entre -20 e 20
-                    Math.random() * 8 + 2,      // Y entre 2 e 10
-                    Math.random() * -100 - 10   // Z entre -10 e -110
+                    (Math.random() - 0.5) * 40, 
+                    Math.random() * 8 + 2,    
+                    Math.random() * -100 - 10   
                 );
                 
-                // Dados de animação
                 mathElement.userData = {
                     initialY: mathElement.position.y,
                     floatSpeed: Math.random() * 0.5 + 0.3,
@@ -1467,9 +1457,6 @@
                 scene.add(mathElement);
                 pixelMathElements.push(mathElement);
             }
-
-            // FUNDO MELHORADO COM MONTANHAS E NUVENS
-            // Montanhas distantes
             for (let i = 0; i < 6; i++) {
                 const mountainGeometry = new THREE.ConeGeometry(8 + Math.random() * 10, 15 + Math.random() * 15, 8);
                 const mountainMaterial = new THREE.MeshStandardMaterial({ 
@@ -1488,11 +1475,9 @@
                 scene.add(mountain);
             }
             
-            // Nuvens flutuantes
             for (let i = 0; i < 12; i++) {
                 const cloudGroup = new THREE.Group();
                 
-                // Criar nuvem com múltiplas esferas
                 for (let j = 0; j < 4; j++) {
                     const cloudPart = new THREE.Mesh(
                         new THREE.SphereGeometry(1.5 + Math.random() * 1.5, 8, 6),
@@ -1517,7 +1502,6 @@
                     -60 - Math.random() * 100
                 );
                 
-                // Movimento lento das nuvens
                 cloudGroup.userData = {
                     driftSpeed: (Math.random() - 0.5) * 0.02
                 };
@@ -1525,7 +1509,6 @@
                 scene.add(cloudGroup);
             }
             
-            // Solo ao redor da pista
             const groundGeometry = new THREE.PlaneGeometry(200, 400);
             const groundMaterial = new THREE.MeshStandardMaterial({
                 color: 0x7cb342,
@@ -1538,7 +1521,6 @@
             ground.receiveShadow = true;
             scene.add(ground);
 
-            // PARTÍCULAS AMBIENTAIS FLUTUANTES
             const particleCount = 40;
             const particleGeometry = new THREE.BufferGeometry();
             const positions = [];
@@ -1551,9 +1533,8 @@
                     (Math.random() - 0.5) * 200
                 );
                 
-                // Cores variadas para papéis/folhas
                 const color = new THREE.Color();
-                const hue = Math.random() * 0.3 + 0.1; // Tons amarelados/esverdeados
+                const hue = Math.random() * 0.3 + 0.1;
                 color.setHSL(hue, 0.7, 0.7);
                 colors.push(color.r, color.g, color.b);
             }
@@ -1574,6 +1555,10 @@
             console.log("DEBUG: initThreeJS finished");
         }
         
+        // ==========================================================
+        //         FIM DAS FUNÇÕES ALTERADAS
+        // ==========================================================
+
         function createTextTexture(text, width = 128, height = 64, fontSize = 40, bgColor = 'rgba(55, 65, 81, 0.85)', textColor = 'white') { 
             const c = document.createElement('canvas');
             c.width = width;
@@ -1609,13 +1594,10 @@
             canvas.height = height;
             const ctx = canvas.getContext('2d');
             
-            // Desabilitar anti-aliasing para efeito pixelado
             ctx.imageSmoothingEnabled = false;
             
-            // Fundo transparente
             ctx.clearRect(0, 0, width, height);
             
-            // Configurar fonte pixelada
             ctx.font = `${fontSize}px 'Press Start 2P'`;
             ctx.fillStyle = '#00ff00'; // Verde neon
             ctx.strokeStyle = '#004400'; // Verde escuro para contorno
@@ -1623,15 +1605,12 @@
             ctx.textAlign = 'center';
             ctx.textBaseline = 'middle';
             
-            // Adicionar efeito de brilho pixelado
             ctx.shadowColor = '#00ff00';
             ctx.shadowBlur = 4;
             
-            // Desenhar texto com contorno
             ctx.strokeText(text, width / 2, height / 2);
             ctx.fillText(text, width / 2, height / 2);
             
-            // Criar textura
             const texture = new THREE.CanvasTexture(canvas);
             texture.needsUpdate = true;
             texture.minFilter = THREE.NearestFilter;
@@ -1705,26 +1684,10 @@
 
         function adjustCameraForAspect() {
             if (!camera) return;
-            if (camera.aspect < 1) {
+            if (camera.aspect < 1) { // Tela mais alta que larga (retrato)
                 camera.position.z = 7;
-            } else {
+            } else { // Tela mais larga que alta (paisagem)
                 camera.position.z = 5;
-            }
-        }
-
-        function resizeGame() {
-            // Usa as dimensões da janela, que é mais confiável.
-            const newWidth = window.innerWidth;
-            const newHeight = window.innerHeight;
-
-            if (camera) {
-                camera.aspect = newWidth / newHeight;
-                adjustCameraForAspect(); // Sua função que ajusta o zoom da câmera
-                camera.updateProjectionMatrix();
-            }
-
-            if (renderer) {
-                renderer.setSize(newWidth, newHeight);
             }
         }
         
@@ -1737,23 +1700,18 @@
 
             const deltaTime = (timestamp - lastFrameTime) / 1000 || 0;
             lastFrameTime = timestamp;
-
-            // Céu com cores fixas mais realistas (removida animação desnecessária)
-
+            
             const targetX = (characterLane - (LANE_COUNT - 1) / 2) * ANSWER_BOX_SPACING;
             if(characterGroup) {
                 characterGroup.position.x = THREE.MathUtils.lerp(characterGroup.position.x, targetX, 0.22);
                 
-                // Animação de corrida
                 if (!isJumping) {
                     const runCycle = timestamp * 0.01;
                     const bobAmount = Math.sin(runCycle) * 0.02;
                     characterGroup.position.y = bobAmount;
                     
-                    // Rotação subtil do corpo
                     characterGroup.rotation.z = Math.sin(runCycle * 0.5) * 0.05;
                     
-                    // Movimento dos braços
                     const leftArm = characterGroup.children.find(child => child.position.x < 0 && child.geometry?.type === 'CylinderGeometry');
                     const rightArm = characterGroup.children.find(child => child.position.x > 0 && child.geometry?.type === 'CylinderGeometry');
                     if (leftArm && rightArm) {
@@ -1761,7 +1719,6 @@
                         rightArm.rotation.x = -Math.sin(runCycle) * 0.3;
                     }
                     
-                    // Criar partículas de poeira ocasionalmente
                     if (Math.random() < 0.1) {
                         const dustGeometry = new THREE.SphereGeometry(0.05, 4, 4);
                         const dustMaterial = new THREE.MeshBasicMaterial({ 
@@ -1808,11 +1765,9 @@
 
             answerBoxes.forEach(box => { 
                 box.position.z += movement;
-                // Só esconde as caixas se elas passaram muito longe da câmara
-                // E se não estamos à espera que fiquem visíveis
                 if (box.position.z > camera.position.z + 15 && !answersVisible) { 
                      box.visible = false; 
-                 }
+                   }
             });
 
             if (characterGroup && isJumping) { 
@@ -1831,7 +1786,6 @@
             
             updateExplosions(deltaTime);
             
-            // Atualizar partículas de poeira
             for (let i = dustParticles.length - 1; i >= 0; i--) {
                 const dust = dustParticles[i];
                 dust.userData.life -= deltaTime;
@@ -1849,7 +1803,6 @@
             } 
             
             const groundLaneWidth = LANE_WIDTH_VISUAL * LANE_COUNT + ANSWER_BOX_SPACING * (LANE_COUNT -1) + LANE_WIDTH_VISUAL;
-            // sideElements removidos
 
             floatingElements.forEach(element => {
                 element.position.z += movement * 0.5; 
@@ -1876,13 +1829,11 @@
                 starParticles.geometry.attributes.position.needsUpdate = true;
             }
 
-            // Animar nuvens flutuantes
             scene.traverse((child) => {
                 if (child.isGroup && child.userData.driftSpeed !== undefined) {
                     child.position.x += child.userData.driftSpeed;
                     child.position.y += Math.sin(Date.now() * 0.0005) * 0.01;
                     
-                    // Reposicionar nuvem quando sai de vista
                     if (Math.abs(child.position.x) > 80) {
                         child.position.x = -Math.sign(child.position.x) * 80;
                         child.position.z = -60 - Math.random() * 100;
@@ -1890,20 +1841,15 @@
                 }
             });
 
-            // Atualizar elementos matemáticos pixelados
             pixelMathElements.forEach(mathElement => {
                 const userData = mathElement.userData;
                 
-                // Movimento flutuante vertical
                 mathElement.position.y = userData.initialY + Math.sin(Date.now() * 0.001 * userData.floatSpeed) * 0.5;
                 
-                // Movimento horizontal lento
                 mathElement.position.x += userData.horizontalSpeed * deltaTime;
                 
-                // Rotação suave
                 mathElement.rotation.z += userData.rotationSpeed * deltaTime;
                 
-                // Sistema de piscada
                 userData.blinkTimer += deltaTime;
                 if (userData.blinkTimer > userData.blinkDuration) {
                     const blinkPhase = (userData.blinkTimer - userData.blinkDuration) % 1;
@@ -1917,10 +1863,8 @@
                     }
                 }
                 
-                // Mover para a frente com a cena
                 mathElement.position.z += movement * 0.8;
                 
-                // Regenerar elemento quando sai de vista
                 if (mathElement.position.z > camera.position.z + 20) {
                     mathElement.position.z = Math.random() * -200 - 50;
                     mathElement.position.x = (Math.random() - 0.5) * 40;
@@ -1928,7 +1872,6 @@
                     userData.initialY = mathElement.position.y;
                     userData.blinkTimer = Math.random() * 10;
                     
-                    // Atualizar texto ocasionalmente
                     if (Math.random() < 0.3) {
                         const mathTexts = [
                             '0', '1', '2', '3', '4', '5', '6', '7', '8', '9',
@@ -1955,7 +1898,6 @@
         function updateGameLogic(deltaTimeMs) {
             if (gameState !== 'playing') return;
             
-            // Só conta o tempo quando as respostas estão visíveis
             if (answersVisible) {
                 questionTimer += deltaTimeMs;
             }
@@ -1972,7 +1914,6 @@
                     return;
                 }
                 questionTimer = 0; 
-                // Adiciona delay antes da próxima questão após timeout
                 setTimeout(() => {
                     if(gameState === 'playing') {
                         resetAndGenerateNewQuestion();
@@ -1983,8 +1924,8 @@
         
         function resetAndGenerateNewQuestion() {
             console.log("DEBUG: resetAndGenerateNewQuestion called");
-            questionTimer = 0; // Garante que o timer seja resetado
-            answersVisible = false; // Reset da flag
+            questionTimer = 0;
+            answersVisible = false;
             const charZ = characterGroup ? characterGroup.position.z : 1.5;
             answerBoxes.forEach((box, index) => {
                 const xPosition = (index - (LANE_COUNT - 1) / 2) * ANSWER_BOX_SPACING;
@@ -2024,7 +1965,6 @@
             gameScreenContainer.classList.remove('hidden');
             gameUI.classList.remove('hidden');
             
-            // Mostrar controlos touch em mobile
             showTouchControls();
 
             if (!renderer) { 
@@ -2057,9 +1997,9 @@
                     }
                     starParticles.geometry.attributes.position.needsUpdate = true;
                 }
-
             }
             
+            // A chamada para resizeGame() aqui garante que o tamanho está correto desde o início.
             resizeGame(); 
             
             if (!renderer || !camera || gameState === 'gameOver') { 
@@ -2078,9 +2018,7 @@
             
             let correctAnswer, questionText;
             
-            // Sistema de níveis baseado na pontuação
             if (score < 30) {
-                // NÍVEL 1: Operações básicas com números pequenos (1-10)
                 const num1 = Math.floor(Math.random() * 10) + 1;
                 const num2 = Math.floor(Math.random() * 10) + 1;
                 const operation = Math.random() < 0.7 ? '+' : '-';
@@ -2089,7 +2027,6 @@
                     correctAnswer = num1 + num2;
                     questionText = `${num1} + ${num2} = ?`;
                 } else {
-                    // Garantir que não temos resultados negativos
                     if (num1 < num2) {
                         correctAnswer = num2 - num1;
                         questionText = `${num2} - ${num1} = ?`;
@@ -2100,7 +2037,6 @@
                 }
                 
             } else if (score < 60) {
-                // NÍVEL 2: Adiciona multiplicação e números maiores (1-15)
                 const num1 = Math.floor(Math.random() * 15) + 1;
                 const num2 = Math.floor(Math.random() * 15) + 1;
                 const operation = Math.random();
@@ -2117,7 +2053,6 @@
                         questionText = `${num1} - ${num2} = ?`;
                     }
                 } else {
-                    // Multiplicação com números menores
                     const mNum1 = Math.floor(Math.random() * 8) + 1;
                     const mNum2 = Math.floor(Math.random() * 8) + 1;
                     correctAnswer = mNum1 * mNum2;
@@ -2125,29 +2060,24 @@
                 }
                 
             } else if (score < 100) {
-                // NÍVEL 3: Adiciona divisão e números até 20
                 const operation = Math.random();
                 
                 if (operation < 0.25) {
-                    // Adição com números maiores
                     const num1 = Math.floor(Math.random() * 20) + 5;
                     const num2 = Math.floor(Math.random() * 20) + 5;
                     correctAnswer = num1 + num2;
                     questionText = `${num1} + ${num2} = ?`;
                 } else if (operation < 0.5) {
-                    // Subtração
                     const num1 = Math.floor(Math.random() * 30) + 10;
                     const num2 = Math.floor(Math.random() * 20) + 1;
                     correctAnswer = num1 - num2;
                     questionText = `${num1} - ${num2} = ?`;
                 } else if (operation < 0.75) {
-                    // Multiplicação
                     const mNum1 = Math.floor(Math.random() * 10) + 2;
                     const mNum2 = Math.floor(Math.random() * 10) + 2;
                     correctAnswer = mNum1 * mNum2;
                     questionText = `${mNum1} × ${mNum2} = ?`;
                 } else {
-                    // Divisão (garantir divisão exata)
                     const divisor = Math.floor(Math.random() * 8) + 2;
                     const quotient = Math.floor(Math.random() * 10) + 2;
                     const dividend = divisor * quotient;
@@ -2156,31 +2086,26 @@
                 }
                 
             } else if (score < 150) {
-                // NÍVEL 4: Operações com dois passos e números maiores
                 const operation = Math.random();
                 
                 if (operation < 0.3) {
-                    // Operação de dois passos (adição e subtração)
                     const num1 = Math.floor(Math.random() * 20) + 5;
                     const num2 = Math.floor(Math.random() * 15) + 5;
                     const num3 = Math.floor(Math.random() * 10) + 1;
                     correctAnswer = num1 + num2 - num3;
                     questionText = `${num1} + ${num2} - ${num3} = ?`;
                 } else if (operation < 0.6) {
-                    // Multiplicação com números maiores
                     const mNum1 = Math.floor(Math.random() * 12) + 3;
                     const mNum2 = Math.floor(Math.random() * 12) + 3;
                     correctAnswer = mNum1 * mNum2;
                     questionText = `${mNum1} × ${mNum2} = ?`;
                 } else if (operation < 0.8) {
-                    // Divisão com números maiores
                     const divisor = Math.floor(Math.random() * 12) + 2;
                     const quotient = Math.floor(Math.random() * 15) + 2;
                     const dividend = divisor * quotient;
                     correctAnswer = quotient;
                     questionText = `${dividend} ÷ ${divisor} = ?`;
                 } else {
-                    // Operação mista (multiplicação e adição)
                     const num1 = Math.floor(Math.random() * 8) + 2;
                     const num2 = Math.floor(Math.random() * 8) + 2;
                     const num3 = Math.floor(Math.random() * 20) + 5;
@@ -2189,11 +2114,9 @@
                 }
                 
             } else {
-                // NÍVEL 5+: Operações complexas, incluindo potências e raízes
                 const operation = Math.random();
                 
                 if (operation < 0.2) {
-                    // Operação de três passos
                     const num1 = Math.floor(Math.random() * 15) + 5;
                     const num2 = Math.floor(Math.random() * 10) + 5;
                     const num3 = Math.floor(Math.random() * 8) + 2;
@@ -2201,29 +2124,25 @@
                     correctAnswer = (num1 + num2) * num3 - num4;
                     questionText = `(${num1} + ${num2}) × ${num3} - ${num4} = ?`;
                 } else if (operation < 0.4) {
-                    // Potências simples
                     const base = Math.floor(Math.random() * 10) + 2;
                     const exponent = Math.random() < 0.5 ? 2 : 3;
                     correctAnswer = Math.pow(base, exponent);
                     questionText = `${base}${exponent === 2 ? '²' : '³'} = ?`;
                 } else if (operation < 0.6) {
-                    // Raiz quadrada (apenas de quadrados perfeitos)
                     const perfectSquares = [4, 9, 16, 25, 36, 49, 64, 81, 100, 121, 144];
                     const square = perfectSquares[Math.floor(Math.random() * perfectSquares.length)];
                     correctAnswer = Math.sqrt(square);
                     questionText = `√${square} = ?`;
                 } else if (operation < 0.8) {
-                    // Divisão complexa
                     const num1 = Math.floor(Math.random() * 50) + 20;
                     const num2 = Math.floor(Math.random() * 10) + 2;
                     const num3 = Math.floor(Math.random() * 5) + 2;
                     correctAnswer = Math.floor(num1 / num2) * num3;
                     questionText = `(${num1} ÷ ${num2}) × ${num3} = ?`;
                 } else {
-                    // Porcentagem simples
                     const percentages = [10, 20, 25, 50, 75];
                     const percentage = percentages[Math.floor(Math.random() * percentages.length)];
-                    const baseNum = Math.floor(Math.random() * 10) * 10 + 20; // 20, 30, 40...
+                    const baseNum = Math.floor(Math.random() * 10) * 10 + 20;
                     correctAnswer = (percentage / 100) * baseNum;
                     questionText = `${percentage}% de ${baseNum} = ?`;
                 }
@@ -2231,8 +2150,7 @@
             
             currentQuestion = { text: questionText, answer: correctAnswer };
             questionDisplay.textContent = currentQuestion.text;
-
-            // Gerar respostas incorretas próximas à correta
+            
             const answers = [correctAnswer];
             while (answers.length < LANE_COUNT) { 
                 let offsetRange = correctAnswer > 50 ? 10 : (correctAnswer > 20 ? 6 : 4);
@@ -2266,7 +2184,6 @@
             while(answers.length > LANE_COUNT) answers.pop();
             while(answers.length < LANE_COUNT) answers.push(Math.max(0, correctAnswer + answers.length + 1));
 
-            // Embaralhar as respostas
             for (let i = answers.length - 1; i > 0; i--) { 
                 const j = Math.floor(Math.random() * (i + 1));
                 [answers[i], answers[j]] = [answers[j], answers[i]];
@@ -2275,12 +2192,10 @@
             laneAnswers = answers; 
             answersVisible = false;
             
-            // Primeiro esconde todas as caixas de resposta
             answerBoxes.forEach(box => {
                 box.visible = false;
             });
             
-            // Depois de um delay, mostra as respostas
             setTimeout(() => {
                 if(gameState === 'playing') {
                     updateAnswerBoxesVisibilityAndText(); 
@@ -2296,7 +2211,6 @@
             if (gameState !== 'playing' || !answersVisible) {
                 return;
             }
-            // CORREÇÃO: Bloqueia a função para evitar múltiplas execuções
             answersVisible = false;
 
             const selectedAnswerValue = laneAnswers[collidedBoxIndex];
@@ -2349,7 +2263,6 @@
             gameUI.classList.add('hidden');
             gameOverScreen.classList.remove('hidden');
             
-            // Esconder controlos touch
             hideTouchControls();
         }
 
@@ -2374,18 +2287,16 @@
 
             if (gameState !== 'playing') return;
 
-            // Controlos originais (setas e espaço)
             if (e.key === 'ArrowLeft') {
                 characterLane = Math.max(0, characterLane - 1);
             } else if (e.key === 'ArrowRight') {
                 characterLane = Math.min(LANE_COUNT - 1, characterLane + 1);
             } else if ((e.key === ' ' || e.key === 'ArrowUp') && !isJumping) {
-                if (e.preventDefault) e.preventDefault(); // Previne que o espaço ative botões
+                if (e.preventDefault) e.preventDefault();
                 isJumping = true;
                 jumpVelocityY = JUMP_VELOCITY_INITIAL;
             }
             
-            // Novos controlos WASD
             else if (e.key.toLowerCase() === 'a') {
                 characterLane = Math.max(0, characterLane - 1);
             } else if (e.key.toLowerCase() === 'd') {
@@ -2395,19 +2306,17 @@
                 jumpVelocityY = JUMP_VELOCITY_INITIAL;
             } else if (e.key.toLowerCase() === 's') {
                 isDucking = true;
-                // Efeito visual de agachamento
                 if (characterGroup) {
-                    characterGroup.scale.y = 0.7; // Reduz altura da personagem
-                    characterGroup.position.y = -0.1; // Abaixa um pouco
+                    characterGroup.scale.y = 0.7;
+                    characterGroup.position.y = -0.1;
                 }
-                // Agachamento por tempo limitado
                 setTimeout(() => {
                     isDucking = false;
                     if (characterGroup) {
-                        characterGroup.scale.y = 1; // Restaura altura normal
-                        characterGroup.position.y = isJumping ? characterGroup.position.y : 0; // Restaura posição se não estiver a pular
+                        characterGroup.scale.y = 1;
+                        characterGroup.position.y = isJumping ? characterGroup.position.y : 0;
                     }
-                }, 500); // Agacha por 500ms
+                }, 500);
             }
         }
 
@@ -2466,21 +2375,18 @@
             resumeButton.blur();
         });
         
-        // CONTROLOS TOUCH MOBILE
         const touchControls = document.getElementById('touchControls');
         const touchLeft = document.getElementById('touchLeft');
         const touchRight = document.getElementById('touchRight');
         const touchJump = document.getElementById('touchJump');
         const touchDuck = document.getElementById('touchDuck');
         
-        // Detetar se é dispositivo móvel
         function isMobile() {
             return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) || 
                    ('ontouchstart' in window) || 
                    window.innerWidth <= 768;
         }
         
-        // Mostrar controlos touch apenas em mobile
         function showTouchControls() {
             if (isMobile() && gameState === 'playing') {
                 touchControls.classList.add('show');
@@ -2491,7 +2397,6 @@
             touchControls.classList.remove('show');
         }
         
-        // Event listeners para controlos touch
         touchLeft.addEventListener('touchstart', (e) => {
             e.preventDefault();
             handleKeyPress({ key: 'ArrowLeft' });
@@ -2512,15 +2417,15 @@
             handleKeyPress({ key: 's' });
         });
         
-        // Evitar scroll em mobile
         document.addEventListener('touchmove', (e) => {
             if (gameState === 'playing') e.preventDefault();
         }, { passive: false });
         
-        // Detetar orientação mobile
+        // ### EVENT LISTENERS ALTERADOS ###
+        // Unificados para chamar a nova função `resizeGame`.
         window.addEventListener('resize', resizeGame);
         window.addEventListener('orientationchange', () => {
-            // Adiciona um pequeno delay na mudança de orientação para dar tempo ao navegador
+             // Adiciona um pequeno delay na mudança de orientação para dar tempo ao navegador
             setTimeout(resizeGame, 100);
         });
         
@@ -2535,8 +2440,8 @@
         }
 
         // Inicialização
-        resizeGame();
-        startScreen.classList.remove('hidden');
+        resizeGame(); 
+        startScreen.classList.remove('hidden'); 
         console.log("DEBUG: Game setup finished. Waiting for start button.");
 
     });
