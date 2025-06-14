@@ -653,12 +653,6 @@
             const characterHead = new THREE.Mesh(headGeometry, skinMaterial);
             characterHead.castShadow = true;
             characterHead.position.y = CHARACTER_LEG_LENGTH + CHARACTER_TRUNK_HEIGHT / 2 + CHARACTER_HEAD_RADIUS * 1.2;
-            const eyeGeo = new THREE.SphereGeometry(CHARACTER_HEAD_RADIUS * 0.1, 8, 8);
-            const eyeMaterial = new THREE.MeshStandardMaterial({ color: 0x000000 });
-            const leftEye = new THREE.Mesh(eyeGeo, eyeMaterial);
-            leftEye.position.set(-CHARACTER_HEAD_RADIUS * 0.35, CHARACTER_HEAD_RADIUS * 0.1, CHARACTER_HEAD_RADIUS * 0.9);
-            const rightEye = leftEye.clone();
-            rightEye.position.x = CHARACTER_HEAD_RADIUS * 0.35;
             const mouthGeo = new THREE.TorusGeometry(CHARACTER_HEAD_RADIUS * 0.3, CHARACTER_HEAD_RADIUS * 0.05, 8, 16, Math.PI);
             const mouthMat = new THREE.MeshStandardMaterial({ color: 0xff4444, roughness: 0.6 });
             const mouth = new THREE.Mesh(mouthGeo, mouthMat);
@@ -668,7 +662,8 @@
             const hairMat = new THREE.MeshStandardMaterial({ color: 0x5d4037, roughness: 0.5, metalness: 0.2 });
             const hair = new THREE.Mesh(hairGeo, hairMat);
             hair.position.y = CHARACTER_HEAD_RADIUS * 0.8;
-            characterHead.add(leftEye); characterHead.add(rightEye); characterHead.add(mouth); characterHead.add(hair);
+            characterHead.add(mouth);
+            characterHead.add(hair);
             characterGroup.add(characterHead);
             const trunkGeometry = new THREE.CylinderGeometry(CHARACTER_TRUNK_RADIUS, CHARACTER_TRUNK_RADIUS, CHARACTER_TRUNK_HEIGHT, 20);
             const characterTrunk = new THREE.Mesh(trunkGeometry, shirtMaterial);
