@@ -1337,7 +1337,11 @@
             answersVisible = false;
             answerBoxes.forEach(box => { box.visible = false; });
             setTimeout(() => {
-                if(gameState === 'playing') { updateAnswerBoxesVisibilityAndText(); answersVisible = true; questionTimer = 0; }
+                // This logic should run regardless of whether the game is paused when the timeout fires.
+                // The game loop (animate/updateGameLogic) will handle the state correctly when 'playing'.
+                updateAnswerBoxesVisibilityAndText();
+                answersVisible = true;
+                questionTimer = 0;
             }, QUESTION_TO_ANSWERS_DELAY);
         }
         function handleAnswerSelection(collidedBoxIndex, collidedBoxMesh) {
