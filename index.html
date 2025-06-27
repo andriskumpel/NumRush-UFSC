@@ -1526,6 +1526,9 @@
         }
 
         getTipButton.addEventListener('click', () => {
+            if (gameState === 'playing') {
+                togglePause(); // Pause the game
+            }
             getTip();
             getTipButton.blur();
         });
