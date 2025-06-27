@@ -1137,6 +1137,7 @@
                  element.position.x = (Math.random() - 0.5) * 50;
                  element.position.y = 5 + Math.random() * 15;
             });
+            tipDisplay.classList.add('hidden'); // Hide tip display
             generateQuestion();
         }
         function initGame() { 
@@ -1381,9 +1382,11 @@
             if (gameState === 'playing') {
                 gameState = 'paused';
                 pauseScreen.classList.remove('hidden');
+                // No need to hide tip here, as it might have just been requested.
             } else if (gameState === 'paused') {
                 gameState = 'playing';
                 pauseScreen.classList.add('hidden');
+                tipDisplay.classList.add('hidden'); // Hide tip when resuming
                 lastFrameTime = performance.now();
                 requestAnimationFrame(animate);
             }
@@ -1526,10 +1529,10 @@
         }
 
         getTipButton.addEventListener('click', () => {
+            getTip(); // Fetch and display the tip first
             if (gameState === 'playing') {
-                togglePause(); // Pause the game
+                togglePause(); // Then pause the game if it was playing
             }
-            getTip();
             getTipButton.blur();
         });
 
