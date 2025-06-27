@@ -1,6 +1,6 @@
 # 🎮 NumRush: Aventura Matemática
 
-### Jogo educacional 3D mobile-first para aprender matemática de forma divertida
+### Jogo educacional 3D mobile-first, otimizado para tela cheia em modo paisagem, para aprender matemática de forma divertida
 
 ![Badge Mobile-First](https://img.shields.io/badge/Mobile-First-blue?style=for-the-badge&logo=mobile)
 ![Badge 3D](https://img.shields.io/badge/3D-Game-green?style=for-the-badge&logo=three-dot-js)
@@ -10,11 +10,11 @@
 
 ## 🎯 Sobre o Projeto
 
-**NumRush: Aventura Matemática** é um jogo educacional 3D desenvolvido com foco em dispositivos móveis.
+**NumRush: Aventura Matemática** é um jogo educacional 3D desenvolvido com foco em dispositivos móveis, especialmente otimizado para uma experiência em tela cheia no modo paisagem.
 
 ## 🎮 Características
 
-- 📱 **Mobile-First**: Interface otimizada para dispositivos móveis
+- 📱 **Mobile-First**: Interface otimizada para dispositivos móveis, preferencialmente em tela cheia e modo paisagem para melhor experiência.
 - 🎯 **Controles Touch**: Botões on-screen + controles de teclado
 - 🧮 **5 Níveis**: Sistema de dificuldade progressiva
 - 🎨 **3D Imersivo**: Ambiente 3D com Three.js
@@ -33,7 +33,7 @@ Corra pela pista 3D e resolva equações matemáticas escolhendo a resposta corr
 
 - HTML5, CSS3, JavaScript
 - Three.js para renderização 3D
-- Design responsivo mobile-first
+- Design responsivo mobile-first (otimizado para tela cheia em modo paisagem em dispositivos móveis)
 
 ## 🚀 Como Executar
 
